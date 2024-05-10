@@ -1,8 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-
+from tkinter import messagebox
+from random import uniform
 import matplotlib as mpl
 
+mpl.use("TkAgg")
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 # -------- Global variables ------------
 
@@ -10,6 +14,7 @@ color_main_window = "#FFFBDA"
 color_sidebar = "#77B0AA"
 color_header = "#F6D6D6"
 color_text = "#322C2B"
+data = {}
 
 
 class App(tk.Tk):
@@ -113,11 +118,13 @@ class App(tk.Tk):
         label_5.grid(row=14, **labels_pos)
         label_6 = ttk.Label(
             self.sidebar,
-            text="*Για τυχαία επιλογή ανάμεσα σε \n εύρος τιμής εισάγετε δυο τιμές \n χωρισμένες με κόμμα.",
+            text="*Για τυχαία επιλογή ανάμεσα \n σε δυο τιμές συμπληρώστε \n και τα δυο πεδία .",
             style="design.TLabel",
             font="Italian 9 ",
         )
-        label_6.grid(row=15, sticky="E")
+        label_6.grid(
+            row=15,
+        )
 
         # ------------ Entries ------------
         style.configure(
@@ -133,16 +140,92 @@ class App(tk.Tk):
         }
         entries_pos = {"padx": 10, "sticky": "W"}
 
-        entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        entry_1.grid(row=3, **entries_pos)
-        entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        entry_2.grid(row=6, **entries_pos)
-        entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        entry_3.grid(row=9, **entries_pos)
-        entry_4 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        entry_4.grid(row=12, **entries_pos)
-        entry_5 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        entry_5.grid(row=15, **entries_pos)
+        self.entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_1.grid(row=3, **entries_pos)
+
+        self.entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_2.grid(row=6, **entries_pos)
+        self.entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_3.grid(row=9, **entries_pos)
+        self.entry_4 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_4.grid(row=12, **entries_pos)
+        self.entry_5 = ttk.Entry(self.sidebar, style="TEntry", width=6)
+        self.entry_5.grid(row=15, **entries_pos)
+        self.entry_6 = ttk.Entry(self.sidebar, style="TEntry", width=6)
+        self.entry_6.grid(row=15, padx=10, sticky="E")
+
+        # ------------ Buttons ------------
+        btn_submit = tk.Button(
+            self.sidebar,
+            text="Καταχώρηση",
+            activebackground=color_sidebar,
+            activeforeground=color_main_window,
+            fg=color_text,
+            bg="white",
+            padx=10,
+            pady=15,
+            width=15,
+            wraplength=120,
+            font="Modern 12 ",
+            relief="groove",
+            command=self.submit_form,
+        )
+        btn_submit.grid(row=17, pady=20)
+        # ------------- Plot --------------
+        self.fig = Figure()
+        self.ax = self.fig.add_subplot()
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.place(relx=0.3, rely=0.25, relwidth=0.7, relheight=0.7)
+        NavigationToolbar2Tk(self.canvas, self)
+
+    def createPlot(self, data):
+
+        self.ax.clear()
+        keys = data.keys()
+        values = data.values()
+        self.ax.bar(keys, values)
+        self.canvas.draw_idle()
+
+    def submit_form(self):
+        error = False
+        msg = ""
+        values = [0] * 6
+        for i in range(0, 6):
+            entry = getattr(self, "entry_" + str(i + 1))
+            value = entry.get()
+            if i == 5:
+                if not value:
+                    value = 0
+                    break
+                if int(value) < values[i - 1]:
+                    error = True
+                    msg = "Στην μέση τιμή κατανομής η τιμή στο δεύτερο πεδίο πρεπει να είναι μεγαλύτερη απο την τιμή στο πρώτο "
+
+            if not value.isnumeric():
+                error = True
+                msg = "Οι τιμες πρεπει να είναι αριθμοί"
+            else:
+                values[i] = int(value)
+
+        if error:
+            data = {}
+            messagebox.showwarning("Μη έγκυρες τιμές", msg)
+        else:
+            data = {
+                "Μέγεθος_Πληθυσμού": values[0],
+                "Αριθμός_των_καλύτερων_μελών": values[1],
+                "Αριθμός_γενιών": values[2],
+                "Διασπορά_της_κατανομή": values[3],
+                "Μέσης_τιμή_κατανομής": (
+                    values[4]
+                    if values[5] == 0
+                    else round(uniform(values[4], values[5]), 2)
+                ),
+            }
+            self.createPlot(data)
+
+        print(data)
 
 
 if __name__ == "__main__":
