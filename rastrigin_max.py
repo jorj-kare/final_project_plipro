@@ -8,6 +8,7 @@ from numpy import pi
 from numpy import argsort
 from numpy.random import randn
 from numpy.random import seed
+import matplotlib.pyplot as plt
 
 
 def rastrigin(x):
@@ -34,6 +35,7 @@ def in_bounds(point, bounds):
 # evolution strategy (mu, lambda) algorithm
 def es_comma(objective, bounds, generations, step_size, mu, lam):
     best, best_eval = None, 1e+10
+    generation_means = list()
     # calculate the number of children per parent
     n_children = int(lam / mu)
     # initial population
@@ -44,9 +46,10 @@ def es_comma(objective, bounds, generations, step_size, mu, lam):
             candidate = initial_mean_np + randn(len(bounds)) * spread
         population.append(candidate)
     # perform the search
-    for epoch in range(generations):
+    for generation in range(generations):
         # evaluate fitness for the population
         scores = [objective(c) for c in population]
+        generation_means.append(-sum(scores)/len(scores))
         # rank scores in ascending order
         ranks = argsort(argsort(scores))
         # select the indexes for the top mu ranked solutions
@@ -57,7 +60,7 @@ def es_comma(objective, bounds, generations, step_size, mu, lam):
             # check if this parent is the best solution ever seen
             if scores[i] < best_eval:
                 best, best_eval = population[i], scores[i]
-                print('%d, Best: f(%s) = %.5f' % (epoch, best, -best_eval))
+                # print('%d, Best: f(%s) = %.5f' % (generation, best, -best_eval))
             # create children for parent
             for _ in range(n_children):
                 child = None
@@ -66,8 +69,14 @@ def es_comma(objective, bounds, generations, step_size, mu, lam):
                 children.append(child)
         # replace population with children
         population = children
-    return [best, best_eval]
+    return best, best_eval, generation_means
 
+
+# seed the pseudorandom number generator
+seed(1)
+
+# define the maximum step size
+step_size = 0.15
 
 # Μέγεθος Πληθυσμού. # number of parents selected
 lam = 100
@@ -99,15 +108,8 @@ initial_mean_np = asarray(initial_mean)
 # Πιο συγκεκριμένα, θέλουμε μέσω της γραφικής διεπαφής να δημιουργείται μία
 # γραφική παράσταση όπου ο άξονας χ θα έχει τον αριθμό των γενεών και ο
 # άξονας ψ την μέση τιμή της αντικειμενικής συνάρτησης για τον πληθυσμό ανά γενιά.
-
-
-# define the maximum step size
-step_size = 0.15
-
-# seed the pseudorandom number generator
-seed(1)
-
 # perform the evolution strategy (mu, lambda) search
-best, score = es_comma(objective, bounds, generations, step_size, mu, lam)
-print('Done!')
+best, score, generation_means = es_comma(objective, bounds, generations, step_size, mu, lam)
 print('f(%s) = %f' % (best, -score))
+plt.plot(generation_means)
+plt.show()
