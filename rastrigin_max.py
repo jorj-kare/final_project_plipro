@@ -77,7 +77,7 @@ def es_comma(
     return best, best_eval, generation_means
 
 
-# seed the pseudorandom number generator
+#! seed the pseudorandom number generator
 seed(1)
 
 # # define the maximum step size
