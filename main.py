@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import messagebox
 from random import uniform
 import matplotlib as mpl
+import rastrigin_max as rm
+from numpy import asarray
 
 mpl.use("TkAgg")
 from matplotlib.figure import Figure
@@ -14,17 +16,18 @@ color_main_window = "#FFFBDA"
 color_sidebar = "#77B0AA"
 color_header = "#F6D6D6"
 color_text = "#322C2B"
+color_error = "#FF0080"
 data = {}
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        style = ttk.Style(self)
-        style.theme_use("clam")
+        self.style = ttk.Style(self)
+        self.style.theme_use("clam")
 
         # ------------ Main window ------------
-        self.geometry("1200x800")
+        self.geometry("1200x700")
         self.resizable(0, 0)
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
@@ -35,19 +38,18 @@ class App(tk.Tk):
         self.header.place(relx=0.3, rely=0, relwidth=0.7, relheight=0.12)
 
         # ------------ Sidebar ------------
-        style.configure("sidebar.TFrame", background=color_sidebar)
+        self.style.configure("sidebar.TFrame", background=color_sidebar)
         self.sidebar = ttk.Frame(self, style="sidebar.TFrame")
-        self.sidebar.place(relx=0, rely=0, relwidth=0.3, relheight=1)
+        self.sidebar.place(relx=0, rely=0, relwidth=0.35, relheight=1)
+        self.sidebar["padding"] = (0, 20, 0, 0)
         self.sidebar.grid_columnconfigure(0, weight=1)
 
         # ------------ Separators ---------
-        style.configure(
+        self.style.configure(
             "TSeparator",
             background=color_text,
         )
         seperator_pos = {"ipadx": 250, "pady": 20}
-        separator = ttk.Separator(self.sidebar, orient="horizontal", style="TSeparator")
-        separator.grid(row=1, **seperator_pos)
         separator_1 = ttk.Separator(
             self.sidebar, orient="horizontal", style="TSeparator"
         )
@@ -70,23 +72,14 @@ class App(tk.Tk):
         separator_5.grid(row=16, **seperator_pos)
 
         # ------------ Labels ------------
-        style.configure(
+        self.style.configure(
             "design.TLabel",
             background=color_sidebar,
             foreground=color_text,
             font="Modern 12 ",
             padding=(10, 0, 0, 6),
         )
-        style.configure(
-            "titles.TLabel",
-            background=color_sidebar,
-            foreground=color_text,
-            font="Modern 18 bold",
-            padding=(0, 23, 0, 18),
-        )
         labels_pos = {"sticky": "W"}
-        label = ttk.Label(self.sidebar, text="Μεταβλητές", style="titles.TLabel")
-        label.grid(row=0)
         label_1 = ttk.Label(
             self.sidebar, text="Μέγεθος Πληθυσμού", style="design.TLabel"
         )
@@ -106,31 +99,39 @@ class App(tk.Tk):
         label_3.grid(row=8, **labels_pos)
         label_4 = ttk.Label(
             self.sidebar,
-            text="Διασπορά της κατανομή ",
+            text="Αρχική τιμής της διασποράς της κατανομή ",
             style="design.TLabel",
         )
         label_4.grid(row=11, **labels_pos)
         label_5 = ttk.Label(
             self.sidebar,
-            text="Μέσης τιμή κατανομής ",
+            text="Αρχική τιμή της μέσης τιμή της κατανομής ",
             style="design.TLabel",
         )
         label_5.grid(row=14, **labels_pos)
-        label_6 = ttk.Label(
-            self.sidebar,
-            text="*Για τυχαία επιλογή ανάμεσα \n σε δυο τιμές συμπληρώστε \n και τα δυο πεδία .",
-            style="design.TLabel",
-            font="Italian 9 ",
-        )
-        label_6.grid(
-            row=15,
-        )
+        # label_6 = ttk.Label(
+        #     self.sidebar,
+        #     text="*Για τυχαία επιλογή ανάμεσα \n σε δυο τιμές συμπληρώστε \n και τα δυο πεδία .",
+        #     style="design.TLabel",
+        #     font="Italian 9 ",
+        # )
+        # label_6.grid(
+        #     row=15,
+        # )
 
         # ------------ Entries ------------
-        style.configure(
+        self.style.configure(
             "TEntry",
-            background="#E3FEF7",
+            fieldbackground=color_main_window,
             foreground=color_text,
+            relief="sunken",
+            padding=(5, 5, 5, 0),
+        )
+        self.style.configure(
+            "error.TEntry",
+            fieldbackground=color_main_window,
+            foreground=color_error,
+            bordercolor=color_error,
             relief="sunken",
             padding=(5, 5, 5, 0),
         )
@@ -142,7 +143,6 @@ class App(tk.Tk):
 
         self.entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
         self.entry_1.grid(row=3, **entries_pos)
-
         self.entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
         self.entry_2.grid(row=6, **entries_pos)
         self.entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
@@ -151,9 +151,21 @@ class App(tk.Tk):
         self.entry_4.grid(row=12, **entries_pos)
         self.entry_5 = ttk.Entry(self.sidebar, style="TEntry", width=6)
         self.entry_5.grid(row=15, **entries_pos)
-        self.entry_6 = ttk.Entry(self.sidebar, style="TEntry", width=6)
-        self.entry_6.grid(row=15, padx=10, sticky="E")
+        # ------------ Checkbox -----------
 
+        self.checked = tk.BooleanVar()
+        self.checkbox = tk.Checkbutton(
+            self.sidebar,
+            text="Τυχαία επιλογή \n ανάμεσα σε ενα εύρος",
+            variable=self.checked,
+            background=color_sidebar,
+            activebackground=color_sidebar,
+            foreground=color_text,
+            activeforeground=color_text,
+            bg=color_sidebar,
+            bd=0,
+        )
+        self.checkbox.grid(row=15, sticky="E")
         # ------------ Buttons ------------
         btn_submit = tk.Button(
             self.sidebar,
@@ -173,59 +185,99 @@ class App(tk.Tk):
         btn_submit.grid(row=17, pady=20)
         # ------------- Plot --------------
         self.fig = Figure()
-        self.ax = self.fig.add_subplot()
+        self.plt = self.fig.add_subplot()
+        self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
+        self.plt.set_ylabel(
+            "Mέση τιμή του πληθυσμού ανά γενιά",
+            fontsize=12,
+        )
+        self.plt.set_xlabel(
+            "Αριθμός γενεών",
+            fontsize=12,
+        )
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas_widget = self.canvas.get_tk_widget()
-        self.canvas_widget.place(relx=0.3, rely=0.25, relwidth=0.7, relheight=0.7)
+        self.canvas_widget.place(relx=0.35, rely=0, relwidth=0.65, relheight=0.95)
         NavigationToolbar2Tk(self.canvas, self)
 
     def createPlot(self, data):
-
-        self.ax.clear()
-        keys = data.keys()
-        values = data.values()
-        self.ax.bar(keys, values)
+        self.plt.clear()
+        self.plt.plot(data)
         self.canvas.draw_idle()
 
     def submit_form(self):
+        entries_error = []
         error = False
         msg = ""
-        values = [0] * 6
-        for i in range(0, 6):
+
+        values = [0] * 5
+        print(self.checked.get())
+        for i in range(0, 5):
             entry = getattr(self, "entry_" + str(i + 1))
             value = entry.get()
-            if i == 5:
-                if not value:
-                    value = 0
-                    break
-                if int(value) < values[i - 1]:
-                    error = True
-                    msg = "Στην μέση τιμή κατανομής η τιμή στο δεύτερο πεδίο πρεπει να είναι μεγαλύτερη απο την τιμή στο πρώτο "
 
-            if not value.isnumeric():
+            try:
+                if i == 3:
+                    values[i] = float(value)
+                else:
+                    values[i] = int(value)
+            except ValueError:
                 error = True
-                msg = "Οι τιμες πρεπει να είναι αριθμοί"
-            else:
-                values[i] = int(value)
+                msg = (
+                    "Παρακαλώ εισάγεται ακέραιο ή δεκαδικό αριθμό."
+                    if i == 3
+                    else "Παρακαλώ εισάγεται ακέραιο αριθμό."
+                )
+                entry.configure(style="error.TEntry")
+                entries_error.append(entry)
 
         if error:
             data = {}
             messagebox.showwarning("Μη έγκυρες τιμές", msg)
+            for e in entries_error:
+                e.after(
+                    100,
+                    e.configure(style="TEntry"),
+                )
+
         else:
             data = {
-                "Μέγεθος_Πληθυσμού": values[0],
-                "Αριθμός_των_καλύτερων_μελών": values[1],
-                "Αριθμός_γενιών": values[2],
-                "Διασπορά_της_κατανομή": values[3],
-                "Μέσης_τιμή_κατανομής": (
-                    values[4]
-                    if values[5] == 0
-                    else round(uniform(values[4], values[5]), 2)
-                ),
+                "Μέγεθος_Πληθυσμού": int(values[0]),
+                "Αριθμός_των_καλύτερων_μελών": int(values[1]),
+                "Αριθμός_γενιών": int(values[2]),
+                "Διασπορά_της_κατανομής": float(values[3]),
+                "Μέσης_τιμή_κατανομής": int(values[4]),
             }
-            self.createPlot(data)
 
-        print(data)
+            # define range for input
+            bounds = asarray(
+                [
+                    [-data["Διασπορά_της_κατανομής"], data["Διασπορά_της_κατανομής"]]
+                    for _ in range(data["Μέσης_τιμή_κατανομής"])
+                ]
+            )
+
+            # define the maximum step size
+            step_size = 0.15
+
+            # Αρχική τιμής της μέσης τιμής της κατανομής:
+            # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
+            initial_mean = [-data["Διασπορά_της_κατανομής"]] * data[
+                "Μέσης_τιμή_κατανομής"
+            ]
+            initial_mean_np = asarray(initial_mean)
+
+            best, score, generation_means = rm.es_comma(
+                rm.objective,
+                bounds,
+                data["Αριθμός_γενιών"],
+                step_size,
+                data["Αριθμός_των_καλύτερων_μελών"],
+                data["Μέγεθος_Πληθυσμού"],
+                initial_mean_np,
+                data["Διασπορά_της_κατανομής"],
+            )
+            self.createPlot(generation_means)
 
 
 if __name__ == "__main__":
