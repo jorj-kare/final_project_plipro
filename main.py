@@ -13,9 +13,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 # -------- Global variables ------------
 
-color_main_window = "#FFFBDA"
-color_sidebar = "#77B0AA"
-color_header = "#F6D6D6"
+color_main_window = "#EEF7FF"
+color_sidebar = "#6DA4AA"
 color_text = "#322C2B"
 color_error = "#FF0080"
 data = {}
@@ -32,11 +31,6 @@ class App(tk.Tk):
         self.resizable(0, 0)
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
-
-        # ------------ Header ------------
-
-        self.header = tk.Frame(self, bg=color_main_window)
-        self.header.place(relx=0.3, rely=0, relwidth=0.7, relheight=0.12)
 
         # ------------ Sidebar ------------
         self.style.configure("sidebar.TFrame", background=color_sidebar)
@@ -116,7 +110,7 @@ class App(tk.Tk):
         label_5.grid(row=14, **labels_pos)
         label_6 = ttk.Label(
             self.sidebar,
-            text="Μέση τιμή της κατανομής ",
+            text="Αρχική μέση τιμή της κατανομής ",
             style="design.TLabel",
         )
         label_6.grid(row=17, **labels_pos)
@@ -205,7 +199,6 @@ class App(tk.Tk):
         # ------------- Plot --------------
         self.fig = Figure(facecolor=color_main_window)
         self.plt = self.fig.add_subplot(facecolor=color_main_window)
-
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.place(relx=0.35, rely=0, relwidth=0.65, relheight=0.95)
@@ -213,7 +206,7 @@ class App(tk.Tk):
 
     def createPlot(self, data):
         self.plt.clear()
-        self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
+        # self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
         self.plt.set_ylabel(
             "Mέση τιμή του πληθυσμού ανά γενιά",
             fontsize=12,
@@ -226,7 +219,6 @@ class App(tk.Tk):
         self.canvas.draw_idle()
 
     def threading(self):
-        # Call work function
         t1 = Thread(target=self.submit_form)
         t1.start()
 
@@ -309,6 +301,11 @@ class App(tk.Tk):
             self.progress_bar.stop()
             self.btn_submit["state"] = "normal"
             self.progress_bar.place_forget()
+            self.label_results = tk.Label(
+                self, text="f(%s) = %f" % (best, -score), background=color_main_window
+            )
+            self.label_results.place(x=680, y=50)
+            self.label_results.lift()
             print("f(%s) = %f" % (best, -score))
 
 
