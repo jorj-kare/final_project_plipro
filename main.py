@@ -27,7 +27,7 @@ class App(tk.Tk):
         self.style.theme_use("clam")
 
         # ------------ Main window ------------
-        self.geometry("1200x730")
+        self.geometry("1400x950")
         # self.resizable(0, 0)
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
