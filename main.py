@@ -28,23 +28,22 @@ class App(tk.Tk):
 
         # ------------ Main window ------------
         self.geometry("1200x730")
-        self.resizable(0, 0)
+        # self.resizable(0, 0)
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
-
+        self.option_add("*Dialog.msg.font", "Modern 12")
         # ------------ Sidebar ------------
         self.style.configure("sidebar.TFrame", background=color_sidebar)
         self.sidebar = ttk.Frame(self, style="sidebar.TFrame")
         self.sidebar.place(relx=0, rely=0, relwidth=0.35, relheight=1)
         self.sidebar["padding"] = (0, 20, 0, 0)
         self.sidebar.grid_columnconfigure(0, weight=1)
-
         # ------------ Separators ---------
         self.style.configure(
             "TSeparator",
             background=color_text,
         )
-        seperator_pos = {"ipadx": 250, "pady": 20}
+        seperator_pos = {"ipadx": 300, "pady": 20}
         separator_1 = ttk.Separator(
             self.sidebar, orient="horizontal", style="TSeparator"
         )
@@ -69,6 +68,10 @@ class App(tk.Tk):
             self.sidebar, orient="horizontal", style="TSeparator"
         )
         separator_5.grid(row=19, **seperator_pos)
+        separator_6 = ttk.Separator(
+            self.sidebar, orient="horizontal", style="TSeparator"
+        )
+        separator_6.grid(row=22, **seperator_pos)
 
         # ------------ Labels ------------
         self.style.configure(
@@ -114,6 +117,18 @@ class App(tk.Tk):
             style="design.TLabel",
         )
         label_6.grid(row=17, **labels_pos)
+        label_7 = ttk.Label(
+            self.sidebar,
+            text="Κάτω όριο πεδίου ορισμού ",
+            style="design.TLabel",
+        )
+        label_7.grid(row=20, **labels_pos)
+        label_8 = ttk.Label(
+            self.sidebar,
+            text="Άνω όριο πεδίου ορισμού",
+            style="design.TLabel",
+        )
+        label_8.grid(row=20, padx=10, sticky="E")
 
         # ------------ Entries ------------
         self.style.configure(
@@ -149,21 +164,10 @@ class App(tk.Tk):
         self.entry_5.grid(row=15, **entries_pos)
         self.entry_6 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
         self.entry_6.grid(row=18, **entries_pos)
-        # ------------ Checkbox -----------
-
-        # self.checked = tk.BooleanVar()
-        # self.checkbox = tk.Checkbutton(
-        #     self.sidebar,
-        #     text="Τυχαία επιλογή \n ανάμεσα σε ενα εύρος",
-        #     variable=self.checked,
-        #     background=color_sidebar,
-        #     activebackground=color_sidebar,
-        #     foreground=color_text,
-        #     activeforeground=color_text,
-        #     bg=color_sidebar,
-        #     bd=0,
-        # )
-        # self.checkbox.grid(row=15, sticky="E")
+        self.entry_7 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_7.grid(row=21, **entries_pos)
+        self.entry_8 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_8.grid(row=21, padx=10, sticky="E")
 
         # ------------ Buttons ------------
         self.btn_submit = tk.Button(
@@ -174,14 +178,14 @@ class App(tk.Tk):
             fg=color_text,
             bg=color_main_window,
             padx=10,
-            pady=15,
+            pady=10,
             width=15,
             wraplength=120,
             font="Modern 12 ",
             relief="groove",
             command=self.threading,
         )
-        self.btn_submit.grid(row=20)
+        self.btn_submit.grid(row=23)
 
         # ------------- ProgressBar --------------
         self.style.configure(
@@ -228,9 +232,9 @@ class App(tk.Tk):
         error = False
         msg = ""
 
-        values = [0] * 6
+        values = [0] * 8
 
-        for i in range(0, 6):
+        for i in range(0, 8):
             entry = getattr(self, "entry_" + str(i + 1))
             value = entry.get()
 
@@ -239,6 +243,7 @@ class App(tk.Tk):
                     values[i] = float(value)
                 else:
                     values[i] = int(value)
+
             except ValueError:
                 error = True
                 msg = (
@@ -248,6 +253,20 @@ class App(tk.Tk):
                 )
                 entry.configure(style="error.TEntry")
                 entries_error.append(entry)
+
+        if not error:
+            if values[0] % values[1] != 0:
+                error = True
+                entry = getattr(self, "entry_1")
+                entry.configure(style="error.TEntry")
+                entries_error.append(entry)
+                msg = "Το υπόλοιπο της διαίρεσης: Μεγεθος πληθυσμού / Αριθμός καλύτερων μελών πρέπει να είναι ίσο με μηδέν."
+            elif values[6] >= values[7]:
+                error = True
+                entry = getattr(self, "entry_8")
+                entry.configure(style="error.TEntry")
+                entries_error.append(entry)
+                msg = "Το άνω όριο πρέπει να είναι μεγαλύτερο απο το κάτω."
 
         if error:
             data = {}
@@ -260,29 +279,29 @@ class App(tk.Tk):
 
         else:
             self.btn_submit["state"] = "disabled"
-            self.progress_bar.place(x=720, y=365)
+            self.progress_bar.place(x=920, y=365)
             self.progress_bar.lift()
             self.progress_bar.start()
             data = {
-                "Μέγεθος_Πληθυσμού": int(values[0]),
-                "Αριθμός_των_καλύτερων_μελών": int(values[1]),
-                "Αριθμός_γενιών": int(values[2]),
-                "Διαστασιμότητα": int(values[3]),
-                "Διασπορά_της_κατανομής": float(values[4]),
-                "Μέσης_τιμή_κατανομής": float(values[5]),
+                "Μέγεθος_Πληθυσμού": values[0],
+                "Αριθμός_των_καλύτερων_μελών": values[1],
+                "Αριθμός_γενιών": values[2],
+                "Διαστασιμότητα": values[3],
+                "Διασπορά_της_κατανομής": values[4],
+                "Μέσης_τιμή_κατανομής": values[5],
+                "Κάτω_οριο": values[6],
+                "Ανω_όριο": values[7],
             }
 
             # define range for input
             bounds = asarray(
                 [
-                    [-data["Διασπορά_της_κατανομής"], data["Διασπορά_της_κατανομής"]]
+                    [data["Κάτω_οριο"], data["Ανω_όριο"]]
                     for _ in range(data["Διαστασιμότητα"])
                 ]
             )
 
-            # ! define the maximum step size
-            step_size = 0.15
-
+            step_size = data["Διασπορά_της_κατανομής"]
             # Αρχική τιμής της μέσης τιμής της κατανομής:
             # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
             initial_mean = [data["Μέσης_τιμή_κατανομής"]] * data["Διαστασιμότητα"]
