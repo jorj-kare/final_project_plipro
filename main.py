@@ -1,15 +1,16 @@
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from random import uniform
 import matplotlib as mpl
 import rastrigin_max as rm
 from numpy import asarray
+from numpy import sqrt
 from threading import *
 
 mpl.use("TkAgg")
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 # -------- Global variables ------------
 
@@ -153,20 +154,28 @@ class App(tk.Tk):
         entries_pos = {"padx": 10, "sticky": "W"}
 
         self.entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_1.insert(0, "200")  # Default value for μέγεθος πληθυσμού
         self.entry_1.grid(row=3, **entries_pos)
         self.entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_2.insert(0, "100")  # Default value for αριθμός των καλύτερων μελών
         self.entry_2.grid(row=6, **entries_pos)
         self.entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_3.insert(0, "5000")  # Default value for αριθμός γενιών
         self.entry_3.grid(row=9, **entries_pos)
         self.entry_4 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_4.insert(0, "2")  # Default value for διαστασιμότητα
         self.entry_4.grid(row=12, **entries_pos)
         self.entry_5 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_5.insert(0, "1")  # Default value for διασπορά της κατανομής
         self.entry_5.grid(row=15, **entries_pos)
         self.entry_6 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_6.insert(0, "0")  # Default value for αρχική μέση τιμή της κατανομής
         self.entry_6.grid(row=18, **entries_pos)
         self.entry_7 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_7.insert(0, "-5.12")  # Default value for κάτω όριο πεδίου ορισμού
         self.entry_7.grid(row=21, **entries_pos)
         self.entry_8 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
+        self.entry_8.insert(0, "5.12")  # Default value for άνω όριο πεδίου ορισμού
         self.entry_8.grid(row=21, padx=10, sticky="E")
 
         # ------------ Buttons ------------
@@ -301,7 +310,7 @@ class App(tk.Tk):
                 ]
             )
 
-            step_size = data["Διασπορά_της_κατανομής"]
+            std_dev = sqrt(data["Διασπορά_της_κατανομής"])
             # Αρχική τιμής της μέσης τιμής της κατανομής:
             # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
             initial_mean = [data["Μέσης_τιμή_κατανομής"]] * data["Διαστασιμότητα"]
@@ -310,18 +319,21 @@ class App(tk.Tk):
                 rm.objective,
                 bounds,
                 data["Αριθμός_γενιών"],
-                step_size,
+                std_dev,
                 data["Αριθμός_των_καλύτερων_μελών"],
                 data["Μέγεθος_Πληθυσμού"],
                 initial_mean_np,
-                data["Διασπορά_της_κατανομής"],
             )
             self.createPlot(generation_means)
             self.progress_bar.stop()
             self.btn_submit["state"] = "normal"
             self.progress_bar.place_forget()
             self.label_results = tk.Label(
-                self, text="f(%s) = %f" % (best, -score), background=color_main_window
+                self,
+                text="f(%s) = %f" % (best, -score),
+                background=color_main_window,
+                font=("Modern", 16, "bold"),
+                fg="blue"
             )
             self.label_results.place(x=680, y=50)
             self.label_results.lift()

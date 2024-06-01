@@ -5,6 +5,7 @@
 from numpy import asarray
 from numpy import cos
 from numpy import pi
+from numpy import sqrt
 from numpy import argsort
 from numpy.random import randn
 from numpy.random import seed
@@ -34,7 +35,7 @@ def in_bounds(point, bounds):
 
 # evolution strategy (mu, lambda) algorithm
 def es_comma(
-    objective, bounds, generations, step_size, mu, lam, initial_mean_np, spread
+    objective, bounds, generations, std_dev, mu, lam, initial_mean_np
 ):
     best, best_eval = None, 1e10
     generation_means = list()
@@ -46,7 +47,7 @@ def es_comma(
     for _ in range(lam):
         candidate = None
         while candidate is None or not in_bounds(candidate, bounds):
-            candidate = initial_mean_np + randn(len(bounds)) * spread
+            candidate = initial_mean_np + randn(len(bounds)) * std_dev
         population.append(candidate)
 
     # perform the search
@@ -69,7 +70,7 @@ def es_comma(
             for _ in range(n_children):
                 child = None
                 while child is None or not in_bounds(child, bounds):
-                    child = population[i] + randn(len(bounds)) * step_size
+                    child = population[i] + randn(len(bounds)) * std_dev
                 children.append(child)
         # replace population with children
         population = children
@@ -77,11 +78,14 @@ def es_comma(
     return best, best_eval, generation_means
 
 
-#! seed the pseudorandom number generator
-seed(1)
+# # seed the pseudorandom number generator
+# seed(1)
 
 # # define the maximum step size
-# step_size = 0.15
+# # Αρχική τιμής της διασποράς της κατανομής.
+# # ! changed name
+# variance = 1
+# std_dev = sqrt(variance)
 
 # # Μέγεθος Πληθυσμού. # number of parents selected
 # lam = 100
@@ -98,25 +102,26 @@ seed(1)
 # # τα πεδία για αρχικοποίηση της μέσης τιμής.
 # dimensions = 2
 
-# # Αρχική τιμής της διασποράς της κατανομής.
-# spread = 5.12
+# # ! changed name from spread to lower_bound and upper_bound
+# lower_bound = -5.12
+# upper_bound = 5.12
 # # define range for input
-# bounds = asarray([[-spread, spread] for _ in range(dimensions)])
-# print(bounds)
+# bounds = asarray([[lower_bound, upper_bound] for _ in range(dimensions)])
+# # print(bounds)
+
 # # Αρχική τιμής της μέσης τιμής της κατανομής:
 # # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
-# initial_mean = [-spread] * dimensions
+# # initial_mean = [0] * dimensions
 # initial_mean_np = asarray(initial_mean)
-# print(initial_mean_np)
+# # print(initial_mean_np)
 
-# θα οπτικοποιεί τα αποτελέσματα και τα βήματα του αλγορίθμου.
-# Πιο συγκεκριμένα, θέλουμε μέσω της γραφικής διεπαφής να δημιουργείται μία
-# γραφική παράσταση όπου ο άξονας χ θα έχει τον αριθμό των γενεών και ο
-# άξονας ψ την μέση τιμή της αντικειμενικής συνάρτησης για τον πληθυσμό ανά γενιά.
-# perform the evolution strategy (mu, lambda) search
-
+# # θα οπτικοποιεί τα αποτελέσματα και τα βήματα του αλγορίθμου.
+# # Πιο συγκεκριμένα, θέλουμε μέσω της γραφικής διεπαφής να δημιουργείται μία
+# # γραφική παράσταση όπου ο άξονας χ θα έχει τον αριθμό των γενεών και ο
+# # άξονας ψ την μέση τιμή της αντικειμενικής συνάρτησης για τον πληθυσμό ανά γενιά.
+# # perform the evolution strategy (mu, lambda) search
 # best, score, generation_means = es_comma(
-#     objective, bounds, generations, step_size, mu, lam
+#     objective, bounds, generations, std_dev, mu, lam, initial_mean_np
 # )
 # print("f(%s) = %f" % (best, -score))
 # plt.plot(generation_means)
