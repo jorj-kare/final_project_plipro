@@ -154,10 +154,10 @@ class App(tk.Tk):
         entries_pos = {"padx": 10, "sticky": "W"}
 
         self.entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_1.insert(0, "200")  # Default value for μέγεθος πληθυσμού
+        self.entry_1.insert(0, "100")  # Default value for μέγεθος πληθυσμού
         self.entry_1.grid(row=3, **entries_pos)
         self.entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_2.insert(0, "100")  # Default value for αριθμός των καλύτερων μελών
+        self.entry_2.insert(0, "20")  # Default value for αριθμός των καλύτερων μελών
         self.entry_2.grid(row=6, **entries_pos)
         self.entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
         self.entry_3.insert(0, "5000")  # Default value for αριθμός γενιών
