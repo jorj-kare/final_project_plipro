@@ -43,6 +43,8 @@ def es_comma(
     n_children = int(lam / mu)
     # initial population
     population = list()
+    # how much to decay the standard deviation with each generation
+    decay_factor=0.99
 
     for _ in range(lam):
         candidate = None
@@ -52,13 +54,13 @@ def es_comma(
 
     # perform the search
     for generation in range(generations):
+        # reduce std_dev by decay_factor
+        std_dev *= decay_factor
         # evaluate fitness for the population
         scores = [objective(c) for c in population]
         generation_means.append(-sum(scores) / len(scores))
-        # rank scores in ascending order
-        ranks = argsort(argsort(scores))
-        # select the indexes for the top mu ranked solutions
-        selected = [i for i, _ in enumerate(ranks) if ranks[i] < mu]
+        # rank scores in ascending order and select the top mu ranked solutions
+        selected = argsort(scores)[:mu]
         # create children from parents
         children = list()
         for i in selected:
