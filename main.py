@@ -131,6 +131,15 @@ class App(tk.Tk):
         )
         label_8.grid(row=20, padx=10, sticky="E")
 
+        # Initialize label_results
+        self.label_results = tk.Label(
+            self,
+            background=color_main_window,
+            font=("Modern", 16, "bold"),
+            fg="blue"
+        )
+        self.label_results.place(x=680, y=50)
+
         # ------------ Entries ------------
         self.style.configure(
             "TEntry",
@@ -316,7 +325,7 @@ class App(tk.Tk):
             initial_mean = [data["Μέσης_τιμή_κατανομής"]] * data["Διαστασιμότητα"]
             initial_mean_np = asarray(initial_mean)
             best, score, generation_means = rm.es_comma(
-                rm.objective,
+                rm.rastrigin,
                 bounds,
                 data["Αριθμός_γενιών"],
                 std_dev,
@@ -328,16 +337,9 @@ class App(tk.Tk):
             self.progress_bar.stop()
             self.btn_submit["state"] = "normal"
             self.progress_bar.place_forget()
-            self.label_results = tk.Label(
-                self,
-                text="f(%s) = %f" % (best, -score),
-                background=color_main_window,
-                font=("Modern", 16, "bold"),
-                fg="blue"
-            )
-            self.label_results.place(x=680, y=50)
+            self.label_results.config(text="f(%s) = %f" % (best, score))
             self.label_results.lift()
-            print("f(%s) = %f" % (best, -score))
+            print("f(%s) = %f" % (best, score))
 
 
 if __name__ == "__main__":

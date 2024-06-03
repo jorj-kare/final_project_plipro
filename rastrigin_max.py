@@ -20,14 +20,6 @@ def rastrigin(x):
     return A * len(x) + sum([(xi**2 - A * cos(2 * pi * xi)) for xi in x])
 
 
-def objective(x):
-    """
-    Modifies the Rastrigin function.
-    Flips the sign to have a global maximum (instead of a global minimum).
-    """
-    return -rastrigin(x)
-
-
 def in_bounds(point, bounds):
     """
     Check if a point is within the bounds of the search.
@@ -57,7 +49,7 @@ def es_comma(objective, bounds, generations, std_dev, mu, lam, initial_mean_np):
     Returns:
         tuple: A tuple containing the best solution found, the corresponding fitness value, and a list of generation means.
     """
-    best, best_eval = None, 1e10
+    best, best_eval = None, -1e10
     generation_means = list()
     # calculate the number of children per parent
     n_children = int(lam / mu)
@@ -78,14 +70,14 @@ def es_comma(objective, bounds, generations, std_dev, mu, lam, initial_mean_np):
         std_dev *= decay_factor
         # evaluate fitness for the population
         scores = [objective(c) for c in population]
-        generation_means.append(-sum(scores) / len(scores))
+        generation_means.append(sum(scores) / len(scores))
         # rank scores in ascending order and select the top mu ranked solutions
-        selected = argsort(scores)[:mu]
+        selected = argsort(scores)[-mu:]
         # create children from parents
         children = list()
         for i in selected:
             # check if this parent is the best solution ever seen
-            if scores[i] < best_eval:
+            if scores[i] > best_eval:
                 best, best_eval = population[i], scores[i]
                 # print('%d, Best: f(%s) = %.5f' % (generation, best, -best_eval))
             # create children for parent
