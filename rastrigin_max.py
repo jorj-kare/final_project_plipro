@@ -1,7 +1,6 @@
 # copied and modified from
 # https://machinelearningmastery.com/evolution-strategies-from-scratch-in-python/
 
-# evolution strategy (mu, lambda) of the rastrigin objective function
 from numpy import asarray
 from numpy import cos
 from numpy import pi
@@ -13,18 +12,27 @@ import matplotlib.pyplot as plt
 
 
 def rastrigin(x):
+    """
+    The Rastrigin function is a common test case for optimization algorithms.
+    It has a global minimum at x=0 where it achieves a value of 0.
+    """
     A = 10
     return A * len(x) + sum([(xi**2 - A * cos(2 * pi * xi)) for xi in x])
 
 
-# modifies the Rastrigin function
 def objective(x):
-    # sign flip - to have a global maximum (instead of a global minimum).
+    """
+    Modifies the Rastrigin function.
+    Flips the sign to have a global maximum (instead of a global minimum).
+    """
     return -rastrigin(x)
 
 
-# check if a point is within the bounds of the search
 def in_bounds(point, bounds):
+    """
+    Check if a point is within the bounds of the search.
+    Assumes that bounds is a 2D array with shape (n, 2) where n is the number of dimensions.
+    """
     # enumerate all dimensions of the point
     for d in range(len(bounds)):
         # check if out of bounds for this dimension
@@ -33,10 +41,22 @@ def in_bounds(point, bounds):
     return True
 
 
-# evolution strategy (mu, lambda) algorithm
-def es_comma(
-    objective, bounds, generations, std_dev, mu, lam, initial_mean_np
-):
+def es_comma(objective, bounds, generations, std_dev, mu, lam, initial_mean_np):
+    """
+    Evolution Strategy (mu, lambda) algorithm.
+
+    Args:
+        objective (function): The objective function to be optimized.
+        bounds (list): A list of tuples specifying the lower and upper bounds for each variable.
+        generations (int): The number of generations to run the algorithm.
+        std_dev (float): The standard deviation used for mutation.
+        mu (int): The number of parents to select for reproduction.
+        lam (int): The total population size.
+        initial_mean_np (numpy.ndarray): The initial mean of the population.
+
+    Returns:
+        tuple: A tuple containing the best solution found, the corresponding fitness value, and a list of generation means.
+    """
     best, best_eval = None, 1e10
     generation_means = list()
     # calculate the number of children per parent
@@ -47,9 +67,9 @@ def es_comma(
     decay_factor=0.99
 
     for _ in range(lam):
-        candidate = None
-        while candidate is None or not in_bounds(candidate, bounds):
+        while True:
             candidate = initial_mean_np + randn(len(bounds)) * std_dev
+            if in_bounds(candidate, bounds): break
         population.append(candidate)
 
     # perform the search
@@ -70,9 +90,9 @@ def es_comma(
                 # print('%d, Best: f(%s) = %.5f' % (generation, best, -best_eval))
             # create children for parent
             for _ in range(n_children):
-                child = None
-                while child is None or not in_bounds(child, bounds):
+                while True:
                     child = population[i] + randn(len(bounds)) * std_dev
+                    if in_bounds(child, bounds): break
                 children.append(child)
         # replace population with children
         population = children
@@ -113,7 +133,7 @@ def es_comma(
 
 # # Αρχική τιμής της μέσης τιμής της κατανομής:
 # # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
-# # initial_mean = [0] * dimensions
+# initial_mean = [0] * dimensions
 # initial_mean_np = asarray(initial_mean)
 # # print(initial_mean_np)
 
