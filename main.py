@@ -19,6 +19,11 @@ color_sidebar = "#6DA4AA"
 color_text = "#322C2B"
 color_error = "#FF0080"
 data = {}
+means_arr = []
+bounds_arr = []
+
+# μέγεθος πληθυσμού, αριθμός των καλύτερων μελών, αριθμός γενιών, διασπορά της κατανομής, αρχική μέση τιμή της κατανομής, κάτω όριο πεδίου ορισμού, άνω όριο πεδίου ορισμού
+default_entries_values = [100, 20, 5000, 2, 1, -5.12, 5.12, 0]
 
 
 class App(tk.Tk):
@@ -27,52 +32,39 @@ class App(tk.Tk):
         self.style = ttk.Style(self)
         self.style.theme_use("clam")
 
+        # ----------- variables  ------------
+        self.entries = {}
+        self.labels = {}
+        self.separators = {}
+        self.entries_error = []
+        self.error = False
+        self.msg = ""
+        self.index = 1
+
         # ------------ Main window ------------
         self.geometry("1400x950")
-        # self.resizable(0, 0)
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
         self.option_add("*Dialog.msg.font", "Modern 12")
+
         # ------------ Sidebar ------------
         self.style.configure("sidebar.TFrame", background=color_sidebar)
         self.sidebar = ttk.Frame(self, style="sidebar.TFrame")
         self.sidebar.place(relx=0, rely=0, relwidth=0.35, relheight=1)
         self.sidebar["padding"] = (0, 20, 0, 0)
         self.sidebar.grid_columnconfigure(0, weight=1)
+        for i in range(23):
+            self.sidebar.grid_rowconfigure(i + 1, weight=1)
+
         # ------------ Separators ---------
-        self.style.configure(
-            "TSeparator",
-            background=color_text,
-        )
-        seperator_pos = {"ipadx": 300, "pady": 20}
-        separator_1 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_1.grid(row=4, **seperator_pos)
-        separator_2 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_2.grid(row=7, **seperator_pos)
-        separator_3 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_3.grid(row=10, **seperator_pos)
-        separator_4 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_4.grid(row=13, **seperator_pos)
-        separator_5 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_5.grid(row=16, **seperator_pos)
-        separator_5 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_5.grid(row=19, **seperator_pos)
-        separator_6 = ttk.Separator(
-            self.sidebar, orient="horizontal", style="TSeparator"
-        )
-        separator_6.grid(row=22, **seperator_pos)
+        self.style.configure("TSeparator", background=color_text)
+        row = 4
+        for i in range(7):
+            self.separators["separator_{0}".format(i + 1)] = ttk.Separator(
+                self.sidebar, orient="horizontal", style="TSeparator"
+            )
+            self.separators["separator_" + str(i + 1)].grid(row=row, ipadx=300, pady=20)
+            row += 3
 
         # ------------ Labels ------------
         self.style.configure(
@@ -82,54 +74,29 @@ class App(tk.Tk):
             font="Modern 12 ",
             padding=(10, 0, 0, 6),
         )
-        labels_pos = {"sticky": "W"}
-        label_1 = ttk.Label(
-            self.sidebar, text="Μέγεθος Πληθυσμού", style="design.TLabel"
-        )
-        label_1.grid(row=2, **labels_pos)
 
-        label_2 = ttk.Label(
-            self.sidebar,
-            text="Αριθμός των καλύτερων μελών",
-            style="design.TLabel",
-        )
-        label_2.grid(row=5, **labels_pos)
-        label_3 = ttk.Label(
-            self.sidebar,
-            text="Αριθμός γενιών ",
-            style="design.TLabel",
-        )
-        label_3.grid(row=8, **labels_pos)
-        label_4 = ttk.Label(
-            self.sidebar,
-            text="Διαστασιμότητα",
-            style="design.TLabel",
-        )
-        label_4.grid(row=11, **labels_pos)
-        label_5 = ttk.Label(
-            self.sidebar,
-            text="Διασπορά της κατανομής ",
-            style="design.TLabel",
-        )
-        label_5.grid(row=14, **labels_pos)
-        label_6 = ttk.Label(
-            self.sidebar,
-            text="Αρχική μέση τιμή της κατανομής ",
-            style="design.TLabel",
-        )
-        label_6.grid(row=17, **labels_pos)
-        label_7 = ttk.Label(
-            self.sidebar,
-            text="Κάτω όριο πεδίου ορισμού ",
-            style="design.TLabel",
-        )
-        label_7.grid(row=20, **labels_pos)
-        label_8 = ttk.Label(
-            self.sidebar,
-            text="Άνω όριο πεδίου ορισμού",
-            style="design.TLabel",
-        )
-        label_8.grid(row=20, padx=10, sticky="E")
+        labels_text = [
+            "Μέγεθος Πληθυσμού",
+            "Αριθμός των καλύτερων μελών",
+            "Αριθμός γενιών",
+            "Διαστασιμότητα",
+            "Διασπορά της κατανομής",
+            "Κάτω όριο πεδίου ορισμού",
+            "Άνω όριο πεδίου ορισμού",
+            "Αρχική μέση τιμή της κατανομής",
+            "1η διάσταση",
+        ]
+        row = 2
+        for i in range(9):
+            self.labels["label_{0}".format(i + 1)] = ttk.Label(
+                self.sidebar, text=labels_text[i], style="design.TLabel"
+            )
+            self.labels["label_" + str(i + 1)].grid(row=row, sticky="W")
+            row += 3
+
+        self.labels["label_7"].grid(row=17, sticky="E")
+        self.labels["label_8"].grid(row=20)
+        self.labels["label_9"].grid(row=20, sticky="E", padx=(0, 10))
 
         # ------------ Entries ------------
         self.style.configure(
@@ -147,36 +114,16 @@ class App(tk.Tk):
             relief="sunken",
             padding=(5, 5, 5, 0),
         )
-        entries_opt = {
-            "font": "Modern 12",
-            "width": 12,
-        }
-        entries_pos = {"padx": 10, "sticky": "W"}
+        row = 3
+        for i in range(8):
+            self.entries["entry_{0}".format(i + 1)] = ttk.Entry(
+                self.sidebar, style="TEntry", width=12, font="Modern 12"
+            )
+            self.entries["entry_" + str(i + 1)].grid(row=row, padx=10, sticky="W")
+            row += 3
 
-        self.entry_1 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_1.insert(0, "100")  # Default value for μέγεθος πληθυσμού
-        self.entry_1.grid(row=3, **entries_pos)
-        self.entry_2 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_2.insert(0, "20")  # Default value for αριθμός των καλύτερων μελών
-        self.entry_2.grid(row=6, **entries_pos)
-        self.entry_3 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_3.insert(0, "5000")  # Default value for αριθμός γενιών
-        self.entry_3.grid(row=9, **entries_pos)
-        self.entry_4 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_4.insert(0, "2")  # Default value for διαστασιμότητα
-        self.entry_4.grid(row=12, **entries_pos)
-        self.entry_5 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_5.insert(0, "1")  # Default value for διασπορά της κατανομής
-        self.entry_5.grid(row=15, **entries_pos)
-        self.entry_6 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_6.insert(0, "0")  # Default value for αρχική μέση τιμή της κατανομής
-        self.entry_6.grid(row=18, **entries_pos)
-        self.entry_7 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_7.insert(0, "-5.12")  # Default value for κάτω όριο πεδίου ορισμού
-        self.entry_7.grid(row=21, **entries_pos)
-        self.entry_8 = ttk.Entry(self.sidebar, style="TEntry", **entries_opt)
-        self.entry_8.insert(0, "5.12")  # Default value for άνω όριο πεδίου ορισμού
-        self.entry_8.grid(row=21, padx=10, sticky="E")
+        self.entries["entry_7"].grid(row=18, padx=10, sticky="E")
+        self.entries["entry_8"].grid(row=21)
 
         # ------------ Buttons ------------
         self.btn_submit = tk.Button(
@@ -190,11 +137,44 @@ class App(tk.Tk):
             pady=10,
             width=15,
             wraplength=120,
-            font="Modern 12 ",
+            font="Modern 10 ",
             relief="groove",
             command=self.threading,
         )
-        self.btn_submit.grid(row=23)
+        self.btn_submit.grid(row=23, padx=(0, 50), pady=(0, 50), sticky="E")
+
+        self.btn_next_dim = tk.Button(
+            self.sidebar,
+            text="→",
+            activebackground=color_sidebar,
+            activeforeground=color_main_window,
+            fg=color_text,
+            bg=color_main_window,
+            padx=1,
+            pady=1,
+            width=3,
+            wraplength=20,
+            font="Modern 15  ",
+            relief="groove",
+            command=self.next_dimension,
+        )
+        self.btn_next_dim.grid(row=21, padx=(0, 50), sticky="E")
+        self.btn_reset_form = tk.Button(
+            self.sidebar,
+            text="Επαναφορά",
+            activebackground=color_sidebar,
+            activeforeground=color_main_window,
+            fg=color_text,
+            bg=color_main_window,
+            padx=10,
+            pady=10,
+            width=10,
+            wraplength=120,
+            font="Modern 10 ",
+            relief="groove",
+            command=self.set_default_values,
+        )
+        self.btn_reset_form.grid(row=23, pady=(0, 50), padx=(50, 0), sticky="W")
 
         # ------------- ProgressBar --------------
         self.style.configure(
@@ -217,6 +197,26 @@ class App(tk.Tk):
         self.canvas_widget.place(relx=0.35, rely=0, relwidth=0.65, relheight=0.95)
         NavigationToolbar2Tk(self.canvas, self)
 
+        self.set_default_values()
+
+    # ------------- Functions ----------------
+    def threading(self):
+        t1 = Thread(target=self.submit_form)
+        t1.start()
+
+    def set_default_values(self):
+        means_arr = []
+        bounds_arr = []
+        self.index = 1
+        self.labels["label_9"]["text"] = "1η διάσταση"
+        self.btn_next_dim["state"] = "normal"
+        self.entries["entry_4"]["state"] = "normal"
+        for i in range(3):
+            self.entries["entry_" + str(6 + i)]["state"] = "normal"
+        for i in range(8):
+            self.entries["entry_" + str(i + 1)].delete(0, tk.END)
+            self.entries["entry_" + str(i + 1)].insert(0, default_entries_values[i])
+
     def createPlot(self, data):
         self.plt.clear()
         # self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
@@ -231,62 +231,125 @@ class App(tk.Tk):
         self.plt.plot(data)
         self.canvas.draw_idle()
 
-    def threading(self):
-        t1 = Thread(target=self.submit_form)
-        t1.start()
+    def next_dimension(self):
+        dim = self.entries["entry_4"].get()
+        self.entries["entry_4"]["state"] = "disable"
+        bound = []
+        mean = None
+        # Αμυντικός μηχανισμός για τα πεδία των πεδίων ορισμού και της μέσης τιμής
+        try:
+            # Μετατρέπει τις τιμες σε δεκαδικούς αριθμους, αν η τιμή δεν είναι αριθμός βγάζει σφάλμα
+            bound = [
+                float(self.entries["entry_6"].get()),
+                float(self.entries["entry_7"].get()),
+            ]
+            mean = float(self.entries["entry_8"].get())
+            # Ελέγχει αν το κάτω οριο είναι μεγαλύτερο του πάνω
+            if bound[0] >= bound[1]:
+                raise ValueError("bounds_error")
+            # Ελέγχει αν το η μεση τιμή ειναι εντος ορίων
+            elif mean < bound[0] or mean > bound[1]:
+                raise ValueError("mean_error")
+        except ValueError as e:
+            self.error = True
+            if str(e) == "bounds_error":
+                self.entries["entry_7"].configure(style="error.TEntry")
+                self.entries_error.append("entry_7")
+                self.msg = "Το άνω όριο πρέπει να είναι μεγαλύτερο απο το κάτω."
+            elif str(e) == "mean_error":
+                self.entries["entry_8"].configure(style="error.TEntry")
+                self.entries_error.append("entry_8")
+                self.msg = "Η αρχική μέση τιμη της κατανομής πρέπει να κυμαίνετε εντός των ορίων."
+            else:
+                self.msg = "Για κάθε διάσταση εισάγεται στα πεδία της μεσης τιμης και του πεδίου ορισμού ακέραιο ή δεκαδικό αριθμό."
+                for i in range(3):
+                    self.entries["entry_" + str(6 + i)].configure(style="error.TEntry")
+                    self.entries_error.append("entry_" + str(6 + i))
+
+        if self.error:
+            messagebox.showwarning("Μη έγκυρες τιμές", self.msg)
+            for key in self.entries_error:
+                self.entries[key].after(
+                    100, self.entries[key].configure(style="TEntry")
+                )
+        else:
+            means_arr.append(mean)
+            bounds_arr.append(bound)
+            self.index += 1
+            if self.index > int(dim):
+                self.btn_next_dim["state"] = "disabled"
+                self.labels["label_9"]["text"] = str(self.index - 1) + "η διάσταση"
+                for i in range(3):
+                    self.entries["entry_" + str(6 + i)]["state"] = "disabled"
+            else:
+                self.labels["label_9"]["text"] = str(self.index) + "η διάσταση"
+                for i in range(3):
+                    self.entries["entry_" + str(6 + i)].delete(0, tk.END)
+
+        self.error = False
+        print(bounds_arr[0][1])
 
     def submit_form(self):
-
-        entries_error = []
-        error = False
-        msg = ""
-
-        values = [0] * 8
-
-        for i in range(0, 8):
-            entry = getattr(self, "entry_" + str(i + 1))
-            value = entry.get()
-
+        self.entries_error = []
+        self.msg = ""
+        values = [0] * 5
+        i = 0
+        # Αμυντικός μηχανισμός για: "Μέγεθος Πληθυσμού, Αριθμός των καλύτερων μελών, Αριθμός γενιών, Διαστασιμότητα, Διασπορά της κατανομής
+        for key in self.entries:
+            if key == "entry_6":
+                break
+            value = self.entries[key].get()
             try:
-                if i >= 4:
+                # Για το πεδίο της διασπορας, μετατρεπει την είσοδο σε δεκαδικο αριθμο
+                if key == "entry_5":
                     values[i] = float(value)
+                # Μετατρέπει τις εισόδους σε ακεραιους αριθμους, αν η τιμή δεν είναι αριθμός βγάζει σφάλμα
                 else:
                     values[i] = int(value)
-
+                # Αμυντικός μηχανισμός για αρνητικους αριθμούς
+                if values[i] < 0:
+                    raise ValueError()
             except ValueError:
-                error = True
-                msg = (
-                    "Παρακαλώ εισάγεται ακέραιο ή δεκαδικό αριθμό."
-                    if i >= 4
-                    else "Παρακαλώ εισάγεται ακέραιο αριθμό."
-                )
-                entry.configure(style="error.TEntry")
-                entries_error.append(entry)
+                self.error = True
+                self.entries[key].configure(style="error.TEntry")
+                self.entries_error.append(key)
+                self.msg = "Παρακαλώ εισάγεται θετικό ακέραιο αριθμό."
+            i += 1
+        if not self.error:
+            try:
+                # Ελέγχει αν το υπολοιπο της διαιρεσης (Μεγεθος πληθυσμού / Αριθμός καλύτερων μελών) είναι μηδενικό
+                if values[0] % values[1] != 0:
+                    raise ValueError("modulo_error")
+                # Ελέγχει αν έχουν συμπληρωθεί τα πεδία ορισμού και οι μέσες τιμές για όλες τις διαστάσεις
+                elif len(means_arr) != values[3] or len(bounds_arr) != values[3]:
+                    raise ValueError("dimension_error")
+            except ValueError as e:
 
-        if not error:
-            if values[0] % values[1] != 0:
-                error = True
-                entry = getattr(self, "entry_1")
-                entry.configure(style="error.TEntry")
-                entries_error.append(entry)
-                msg = "Το υπόλοιπο της διαίρεσης: Μεγεθος πληθυσμού / Αριθμός καλύτερων μελών πρέπει να είναι ίσο με μηδέν."
-            elif values[6] >= values[7]:
-                error = True
-                entry = getattr(self, "entry_8")
-                entry.configure(style="error.TEntry")
-                entries_error.append(entry)
-                msg = "Το άνω όριο πρέπει να είναι μεγαλύτερο απο το κάτω."
+                self.error = True
+                if str(e) == "modulo_error":
+                    self.msg = "Το υπόλοιπο της διαίρεσης: Μεγεθος πληθυσμού / Αριθμός καλύτερων μελών πρέπει να είναι ίσο με μηδέν."
+                    self.entries["entry_1"].configure(style="error.TEntry")
+                    self.entries_error.append("entry_1")
+                elif str(e) == "dimension_error":
+                    self.msg = "Συμπληρώστε πρώτα τα πεδία ορισμού και αρχικής μέσης τιμής για κάθε διάσταση."
+                    for i in range(3):
+                        self.entries["entry_" + str(6 + i)].configure(
+                            style="error.TEntry"
+                        )
+                        self.entries_error.append("entry_" + str(6 + i))
 
-        if error:
+        if self.error:
             data = {}
-            messagebox.showwarning("Μη έγκυρες τιμές", msg)
-            for e in entries_error:
-                e.after(
+            messagebox.showwarning("Μη έγκυρες τιμές", self.msg)
+            for key in self.entries_error:
+                self.entries[key].after(
                     100,
-                    e.configure(style="TEntry"),
+                    self.entries[key].configure(style="TEntry"),
                 )
+            self.error = False
 
         else:
+
             self.btn_submit["state"] = "disabled"
             self.progress_bar.place(x=920, y=365)
             self.progress_bar.lift()
@@ -297,15 +360,14 @@ class App(tk.Tk):
                 "Αριθμός_γενιών": values[2],
                 "Διαστασιμότητα": values[3],
                 "Διασπορά_της_κατανομής": values[4],
-                "Μέσης_τιμή_κατανομής": values[5],
-                "Κάτω_οριο": values[6],
-                "Ανω_όριο": values[7],
+                "Μέσης_τιμή_κατανομής": means_arr,
+                "Πεδία_ορισμού": bounds_arr,
             }
 
-            # define range for input
+            # !define range for input
             bounds = asarray(
                 [
-                    [data["Κάτω_οριο"], data["Ανω_όριο"]]
+                    [data["Πεδία_ορισμού"][0][0], data["Πεδία_ορισμού"][0][1]]
                     for _ in range(data["Διαστασιμότητα"])
                 ]
             )
@@ -333,11 +395,12 @@ class App(tk.Tk):
                 text="f(%s) = %f" % (best, -score),
                 background=color_main_window,
                 font=("Modern", 16, "bold"),
-                fg="blue"
+                fg="#3572EF<",
             )
             self.label_results.place(x=680, y=50)
             self.label_results.lift()
             print("f(%s) = %f" % (best, -score))
+            print(data)
 
 
 if __name__ == "__main__":
