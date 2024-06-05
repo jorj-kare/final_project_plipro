@@ -13,7 +13,6 @@ from threading import *
 mpl.use("TkAgg")
 
 # -------- Global variables ------------
-
 color_main_window = "#EEF7FF"
 color_sidebar = "#6DA4AA"
 color_text = "#322C2B"
@@ -126,23 +125,7 @@ class App(tk.Tk):
         self.entries["entry_8"].grid(row=21)
 
         # ------------ Buttons ------------
-        self.btn_submit = tk.Button(
-            self.sidebar,
-            text="Καταχώρηση",
-            activebackground=color_sidebar,
-            activeforeground=color_main_window,
-            fg=color_text,
-            bg=color_main_window,
-            padx=10,
-            pady=10,
-            width=15,
-            wraplength=120,
-            font="Modern 10 ",
-            relief="groove",
-            command=self.threading,
-        )
-        self.btn_submit.grid(row=23, padx=(0, 50), pady=(0, 50), sticky="E")
-
+        # κουμπι για επομενη διασταση
         self.btn_next_dim = tk.Button(
             self.sidebar,
             text="→",
@@ -159,6 +142,24 @@ class App(tk.Tk):
             command=self.next_dimension,
         )
         self.btn_next_dim.grid(row=21, padx=(0, 50), sticky="E")
+        # κουμπί καταχώρησης εισοδων
+        self.btn_submit = tk.Button(
+            self.sidebar,
+            text="Καταχώρηση",
+            activebackground=color_sidebar,
+            activeforeground=color_main_window,
+            fg=color_text,
+            bg=color_main_window,
+            padx=10,
+            pady=10,
+            width=15,
+            wraplength=120,
+            font="Modern 10 ",
+            relief="groove",
+            command=self.threading,
+        )
+        self.btn_submit.grid(row=23, padx=(0, 50), pady=(0, 50), sticky="E")
+        # κουμπί για επαναφορά σε αρχικές τιμές
         self.btn_reset_form = tk.Button(
             self.sidebar,
             text="Επαναφορά",
@@ -200,13 +201,16 @@ class App(tk.Tk):
         self.set_default_values()
 
     # ------------- Functions ----------------
+
+    # Δημιουργεί νεο thread για την εκτέλεση της μεθόδου "submit_form" ωστε να μπορούν να τρέχουν και άλλες λειτουργίες παράλληλα
     def threading(self):
         t1 = Thread(target=self.submit_form)
         t1.start()
 
+    # Επαναφέρει τις προκαθορισμένες τιμές στις εισόδους τις λιστες των πεδίων ορισμου και μεσης τιμής
     def set_default_values(self):
-        means_arr = []
-        bounds_arr = []
+        means_arr.clear()
+        bounds_arr.clear()
         self.index = 1
         self.labels["label_9"]["text"] = "1η διάσταση"
         self.btn_next_dim["state"] = "normal"
@@ -217,6 +221,7 @@ class App(tk.Tk):
             self.entries["entry_" + str(i + 1)].delete(0, tk.END)
             self.entries["entry_" + str(i + 1)].insert(0, default_entries_values[i])
 
+    # Δημιουργεί το γράφημα
     def createPlot(self, data):
         self.plt.clear()
         # self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
@@ -231,6 +236,7 @@ class App(tk.Tk):
         self.plt.plot(data)
         self.canvas.draw_idle()
 
+    # Ελεγχει και αποθηκεύει εφόσον είναι αποδεκτές τις εισόδους των πεδίων ορισμού και μέσης τιμής της κατανομής για κάθε διάσταση χωριστά
     def next_dimension(self):
         dim = self.entries["entry_4"].get()
         self.entries["entry_4"]["state"] = "disable"
@@ -285,9 +291,13 @@ class App(tk.Tk):
                 self.labels["label_9"]["text"] = str(self.index) + "η διάσταση"
                 for i in range(3):
                     self.entries["entry_" + str(6 + i)].delete(0, tk.END)
+                    self.entries["entry_" + str(6 + i)].insert(
+                        0, default_entries_values[5 + i]
+                    )
 
         self.error = False
 
+    # Ελεγχει και αποθηκεύει σε ένα λεξικό εφόσον είναι αποδεκτές τις εισόδους του χρήστη αλλιως παράγει τα κατάλληλα μηνύματα λάθους
     def submit_form(self):
         self.entries_error = []
         self.msg = ""
@@ -348,11 +358,11 @@ class App(tk.Tk):
             self.error = False
 
         else:
-
             self.btn_submit["state"] = "disabled"
-            self.progress_bar.place(x=920, y=365)
+            self.progress_bar.place(relx=0.7, rely=0.5, anchor="center")
             self.progress_bar.lift()
             self.progress_bar.start()
+
             data = {
                 "Μέγεθος_Πληθυσμού": values[0],
                 "Αριθμός_των_καλύτερων_μελών": values[1],
@@ -363,7 +373,7 @@ class App(tk.Tk):
                 "Πεδία_ορισμού": bounds_arr,
             }
 
-            # !define range for input
+            # define range for input
             bounds = asarray(
                 [
                     [data["Πεδία_ορισμού"][i][0], data["Πεδία_ορισμού"][i][1]]
@@ -372,8 +382,8 @@ class App(tk.Tk):
             )
 
             std_dev = sqrt(data["Διασπορά_της_κατανομής"])
+
             # Αρχική τιμής της μέσης τιμής της κατανομής:
-            # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
             initial_mean = data["Μέσης_τιμή_κατανομής"]
             initial_mean_np = asarray(initial_mean)
             best, score, generation_means = rm.es_comma(
@@ -396,8 +406,9 @@ class App(tk.Tk):
                 font=("Modern", 16, "bold"),
                 fg="#3572EF",
             )
-            self.label_results.place(x=680, y=50)
+            self.label_results.place(relx=0.7, rely=0.07, anchor="center")
             self.label_results.lift()
+            self.set_default_values()
             print("f(%s) = %f" % (best, score))
             print(data)
 
