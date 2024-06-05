@@ -287,7 +287,6 @@ class App(tk.Tk):
                     self.entries["entry_" + str(6 + i)].delete(0, tk.END)
 
         self.error = False
-        print(bounds_arr[0][1])
 
     def submit_form(self):
         self.entries_error = []
@@ -367,15 +366,15 @@ class App(tk.Tk):
             # !define range for input
             bounds = asarray(
                 [
-                    [data["Πεδία_ορισμού"][0][0], data["Πεδία_ορισμού"][0][1]]
-                    for _ in range(data["Διαστασιμότητα"])
+                    [data["Πεδία_ορισμού"][i][0], data["Πεδία_ορισμού"][i][1]]
+                    for i in range(data["Διαστασιμότητα"])
                 ]
             )
 
             std_dev = sqrt(data["Διασπορά_της_κατανομής"])
             # Αρχική τιμής της μέσης τιμής της κατανομής:
             # είτε τυχαία επιλογή ανάμεσα σε ένα εύρος είτε σε συγκεκριμένη τιμή.
-            initial_mean = [data["Μέσης_τιμή_κατανομής"]] * data["Διαστασιμότητα"]
+            initial_mean = data["Μέσης_τιμή_κατανομής"]
             initial_mean_np = asarray(initial_mean)
             best, score, generation_means = rm.es_comma(
                 rm.rastrigin,
@@ -395,7 +394,7 @@ class App(tk.Tk):
                 text="f(%s) = %f" % (best, score),
                 background=color_main_window,
                 font=("Modern", 16, "bold"),
-                fg="#3572EF<",
+                fg="#3572EF",
             )
             self.label_results.place(x=680, y=50)
             self.label_results.lift()
