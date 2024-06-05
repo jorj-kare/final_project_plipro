@@ -378,7 +378,7 @@ class App(tk.Tk):
             initial_mean = [data["Μέσης_τιμή_κατανομής"]] * data["Διαστασιμότητα"]
             initial_mean_np = asarray(initial_mean)
             best, score, generation_means = rm.es_comma(
-                rm.objective,
+                rm.rastrigin,
                 bounds,
                 data["Αριθμός_γενιών"],
                 std_dev,
@@ -392,14 +392,14 @@ class App(tk.Tk):
             self.progress_bar.place_forget()
             self.label_results = tk.Label(
                 self,
-                text="f(%s) = %f" % (best, -score),
+                text="f(%s) = %f" % (best, score),
                 background=color_main_window,
                 font=("Modern", 16, "bold"),
                 fg="#3572EF<",
             )
             self.label_results.place(x=680, y=50)
             self.label_results.lift()
-            print("f(%s) = %f" % (best, -score))
+            print("f(%s) = %f" % (best, score))
             print(data)
 
 
