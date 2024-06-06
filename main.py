@@ -19,21 +19,24 @@ from numpy import linspace
 from matplotlib import pyplot
 from matplotlib import cm
 
-# for MyWindow
+# Tkinter and plot libs
 from tkinter import *
+from tkinter.scrolledtext import *
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-import matplotlib.animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class MyWindow:
     def __init__(self, win):
 
         # Ρύθμιση των παραθύρων εμφάνισης
-        outputArea = Text(window, height=10, width=80)
-        outputArea.place(x=90, y=400)
-        graphArea = Text(window, height=31, width=80)
-        graphArea.place(x=770, y=60)
+        # Περιοχή για εμφάνιση αποτελεσμάτων
+        outputArea = ScrolledText(window, height="10", width="80", wrap=WORD)
+        outputArea.place(x=90, y=410)
+
+        # Περιοχή για εμφάνιση γραφημάτων
+        graphArea = Canvas(win, bg="white", height=530, width=600)
+        graphArea.place(x=770, y=45)
 
         self.lbl1 = Label(win, text="a. Μέγεθος Πληθυσμού:")
         self.lbl2 = Label(
@@ -43,19 +46,29 @@ class MyWindow:
         self.lbl4 = Label(win, text="d. Αρχική τιμή της μέσης τιμής της κατανομής:")
         self.lbl5 = Label(win, text="   Τελική τιμή της μέσης τιμής της κατανομής:")
         self.lbl6 = Label(win, text="e. Αρχική τιμή της διασποράς της κατανομής:")
+        self.lbl7 = Label(
+            win,
+            text="   Επιλογή Fitness function, (G) Gauss, (R) Rastrigin, (A) Ackley:",
+        )
+
         self.t1 = Entry()
         self.t2 = Entry()
         self.t3 = Entry()
         self.t4 = Entry()
         self.t5 = Entry()
         self.t6 = Entry()
+        self.t7 = Entry()
 
         self.b1 = Button(
             win,
             text="Simple Evolution Algorithm",
             command=lambda: self.control(outputArea, graphArea),
         )
-        self.b2 = Button(win, text="Exit", command=window.destroy)
+        self.b2 = Button(win, text="Έξοδος", command=win.destroy)
+        self.b3 = Button(
+            win, text="Προηγούμενο", command=lambda: self.step_in_graph(-1)
+        )
+        self.b4 = Button(win, text="Επόμενο", command=lambda: self.step_in_graph(1))
 
         self.lbl1.place(x=100, y=50)
         self.t1.place(x=110, y=70)
@@ -69,22 +82,55 @@ class MyWindow:
         self.t5.place(x=110, y=270)
         self.lbl6.place(x=100, y=300)
         self.t6.place(x=110, y=320)
-        self.b1.place(x=450, y=350)
-        self.b2.place(x=650, y=350)
+        self.lbl7.place(x=100, y=350)
+        self.t7.place(x=110, y=370)
+        self.b1.place(x=500, y=370)
+        self.b2.place(x=680, y=370)
+        self.b3.place(x=1000, y=15)
+        self.b4.place(x=1100, y=15)
 
         # Τοποθέτηση αρχικών τιμών
         population_size = 100
         self.t1.insert(0, population_size)
-        selected_parents = 20
-        self.t2.insert(0, selected_parents)
-        max_iterations = 5000
-        self.t3.insert(0, max_iterations)
+        best_members = 20
+        self.t2.insert(0, best_members)
+        max_generations = 5000
+        self.t3.insert(0, max_generations)
         r_min = -5.12
         self.t4.insert(0, r_min)
         r_max = 5.12
         self.t5.insert(0, r_max)
-        step_size = 0.15
-        self.t6.insert(0, step_size)
+        dispersion = 0.11
+        self.t6.insert(0, dispersion)
+        fitness_var = "G"
+        self.t7.insert(0, fitness_var)
+
+    # Βηματισμός, επόμενο - προηγούμενο στα διαγράμματα
+    def step_in_graph(self, change_by=0):
+        self.change_by = change_by
+
+        first_key = 1
+        # Αριθμός γραφημάτων
+        global cnt_graph
+        last_key = cnt_graph + 1
+        global key
+
+        # Μετακίνηση στο επόμενο
+        if change_by == 1 and key < last_key:
+            key = key + change_by
+
+        # Εμφάνιση στην περιοχή  Πρώτου - Τελευταίου γραφήματος
+        if key > first_key and key < last_key:
+            graph = FigureCanvasTkAgg(globals()[f"fig{key}"], master=self.graphArea)
+            graph.draw()
+            graph.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=False)
+            print("Γράφημα %d Εμφανίστηκε", key)
+
+        # Μετακίνηση στο προηγούμενο
+        if change_by == -1 and key > first_key:
+            key = key + change_by
+
+        return
 
     # Function for Rastrigin plot
     def rastrigin_plot(self, x, y):
@@ -97,22 +143,22 @@ class MyWindow:
         self.x = x
         self.m = m
         self.s = s
-        return (1 / (s * sqrt(2 * pi))) * exp(-((x - m) ** 2) / (2 * s**2))
+        return 1 / (sqrt(2 * pi * (s**2))) * exp(-((x - m) ** 2) / (2 * (s**2)))
 
-    # Fitness function via Gauss function
-    def fitness(self, v):
+    # Fitness using Gauss function
+    def fitnessG(self, v):
         self.v = v
         x, m = v
-        s = statistics.stdev(xaxis)
-        return (1 / (s * sqrt(2 * pi))) * exp(-((x - m) ** 2) / (2 * s**2))
+        s = statistics.stdev(Gxaxis)
+        return 1 / (sqrt(2 * pi * (s**2))) * exp(-((x - m) ** 2) / (2 * (s**2)))
 
-    # fitness function via Rastrigin function
+    # fitness using Rastrigin function
     def fitnessR(self, v):
         self.v = v
         x, y = v
         return (x**2 - 10 * cos(2 * pi * x)) + (y**2 - 10 * cos(2 * pi * y)) + 20
 
-    # fitness function via Ackley's multimodal function
+    # fitness using Ackley's function
     def fitnessA(self, v):
         self.v = v
         x, y = v
@@ -123,148 +169,233 @@ class MyWindow:
             + 20
         )
 
-    # Ελέγχος, εάν ένας υποψήφιος γονέας ή παιδί είναι εντός ορίων
+    # Ρουτίνα ελέγχου, εάν ένας υποψήφιος γονέας ή παιδί είναι εντός ορίων
     def in_limits(self, candidate, limits):
         self.candidate = candidate
         self.limits = limits
 
-        # LOOP στον πίνακα ορίων για έλεγχο υποψήφιου γονέα ή παιδιού
-        for d in range(len(limits)):
-            # Ελέγχος αν είναι εκτός ορίων
-            if candidate[d] < limits[d, 0] or candidate[d] > limits[d, 1]:
+        # Επανάληψη για έλεγχο υποψήφιου γονέα ή παιδιού αν είναι εντός ορίων
+        for i in range(len(limits)):
+            # Αν ο υποψήφιος είναι εκτός ορίων επιστρέφει λάθος
+            if candidate[i] < limits[i, 0] or candidate[i] > limits[i, 1]:
                 return False
         return True
 
     # Evolution Strategy αλγόριθμος με επιλογή για πρόσθεση επιλεγμένων γονέων
-    def evolution_algorithm(
+    def evolution(
         self,
         graphArea,
         outputArea,
+        fitness_var,
         limits,
-        iteration_num,
-        step_size,
-        selected_parents,
+        generations_num,
+        dispersion,
+        best_members,
         population_size,
     ):
         self.graphArea = graphArea
         self.outputArea = outputArea
         self.limits = limits
-        self.iteration_num = iteration_num
-        self.step_size = step_size
-        self.selected_parents = selected_parents
+        self.generations_num = generations_num
+        self.dispersion = dispersion
+        self.best_members = best_members
         self.population_size = population_size
 
-        best, best_eval = None, 1e10  # 1 X 10^10 = 10.000.000.000
-        # Υπολογισμός παιδιών ανα γονείς
-        n_children = int(population_size / selected_parents)
-        # Αρχικοποίηση Πληθυσμού
-        population = list()
-        # Επανάληψη για πρόσθεση Υποψηφίων Γονέων βάσει μεγέθους δημιουργούμενου πληθυσμού
-        for _ in range(population_size):
-            candidate = None
-            # Επανάληψη ενόσω ο υποψήφιος γονέας είναι εκτός ορίων
-            while candidate is None or not self.in_limits(candidate, limits):
-                # Δημιουργία υποψήφιου γονέα βάσει δεδομένων ορίων
-                candidate = limits[:, 0] + rand(len(limits)) * (
+        best = None
+        best_evaluation = 10000000000
+        # Υπολογισμός αιθμού παιδιών
+        children_num = int(population_size / best_members)
+        # Αρχικοποίηση δημιουργούμενου Πληθυσμού
+        created_population = list()
+
+        # Επανάληψη για πρόσθεση Υποψηφίων Γονέων στον αρχικό πληθυσμό
+        for _ in range(population_size):  # Το _ για μη ανάγκη δείκτη
+            candidate_parent = None
+            # Επανάληψη ενόσω ο υποψήφιος γονέας είναι εντός ή εκτός ορίων
+            while candidate_parent is None or not self.in_limits(
+                candidate_parent, limits
+            ):
+                # Αν δεν βρέθηκε, δημιουργία υποψήφιου γονέα μέσα στο όρια
+                candidate_parent = limits[:, 0] + rand(len(limits)) * (
                     limits[:, 1] - limits[:, 0]
                 )
-                population.append(candidate)
+                # Πρόσθεση στον πλυθυσμό
+                created_population.append(candidate_parent)
 
-        child_per_gen = list()
-        # Επανάληψη βάσει γενεών
-        for generation in range(iteration_num):
-            # Υπολογισμός βαθμολογιών (scores) και αποθήκευση σε ξεχωριστή παράλληλη λίστα
-            scores = []
-            for c in population:
-                scores.append(self.fitness(c))
-            # Κατάταξη βαθμολογιών (ranks) σε αύξουσα σειρά με διπλή κλήση ταξινόμησης
-            ranks = argsort(argsort(scores))
-            # Επιλογή δεικτών γονέων με την καλύτερη κατάταξη
-            selected = []
-            for x, _ in enumerate(ranks):  # Ανάγκη για δύο μεταβλητές οπότε x και _
-                if ranks[x] < selected_parents:
-                    selected.append(x)
+        # Επανάληψη βάσει αριθμού γενεών
+        for generation in range(generations_num):
+
+            # Δημιουργία λίστας με τους υποψήφιους βάσει επιλεγμένου μοντέλου fitness
+            success_list = []
+            if fitness_var == "G":  # Gauss
+                for c in created_population:
+                    success_list.append(self.fitnessG(c))
+            elif fitness_var == "R":  # Rastrigin
+                for c in created_population:
+                    success_list.append(self.fitnessR(c))
+            else:  # Ackley
+                for c in created_population:
+                    success_list.append(self.fitnessA(c))
+
+            # Κατάταξη βαθμολογιών σε αύξουσα σειρά με διπλή κλήση ταξινόμησης
+            ordered_list = argsort(argsort(success_list))
+
+            # Δημιουργία λίστας γονέων για την καλύτερη κατάταξη
+            selected_parents = []
+            # Επανάλληψη μέσω (enumerate) για επιστροφή απαρίθμησης της ταξινομιμένης λίστας
+            for x, _ in enumerate(
+                ordered_list
+            ):  # Ανάγκη για δύο μεταβλητές οπότε x και _
+                if ordered_list[x] < best_members:
+                    selected_parents.append(x)  # Πρόσθεση επιλεγμένων γονέων
 
             # Δημιουργία λίστας παιδιών
-            children = list()
+            created_children = list()
             # Επανάληψη στους επιλεγμένους γονείς
-            for i in selected:
-                # ΈΛεγχος αν αυτός ο γονέας είναι η βέλτιστη λύση και εκτύπωση δεδομένων
-                if scores[i] < best_eval:
-                    best, best_eval = population[i], scores[i]
-                    gen_num = generation  # Αριθμός γενεών
-                    pop_num = len(children)  # Πληθυσμός - (παιδιά) ανα γενιά
-                    print("%4d, ΚΑΛΥΤΕΡΟ: f(%s) = %f" % (generation, best, best_eval))
+            for i in selected_parents:
 
+                # ΈΛεγχος αν αυτός ο γονέας είναι λύση και εκτύπωση δεδομένων
+                if success_list[i] < best_evaluation:
+                    best_population = created_population[i]
+                    best_evaluation = success_list[i]
+
+                    # Ορισμός παραμέτρων εκτύπωσης
+                    generation_num = generation  # Αριθμός γενεών
+                    parent_num_num = len(selected_parents)  # Γονείς
+                    child_num = len(created_children)  # Πληθυσμός - (παιδιά) ανα γενιά
+                    best_evaluation_num = max(success_list)  # Καλύτερη Αξιολόγηση
+
+                    # Εκτύπωση
+                    print(
+                        "Γενιά: %d, Παιδιά: %d, f(%s), ΑΞΙΟΛΟΓΗΣΗ %f"
+                        % (generation_num, child_num, best_population, best_evaluation)
+                    )
                     # Εμφάνιση δεδομένων στο παραθυρικό περιβάλλον
-                    buff = "%d, ΚΑΛΥΤΕΡΟ:f(%s)=%f" % (generation, best, best_eval)
+                    buff = "Γενιά: %d, Παιδιά: %d, f(%s), ΑΞΙΟΛΟΓΗΣΗ %f" % (
+                        generation_num,
+                        child_num,
+                        best_population,
+                        best_evaluation,
+                    )
                     outputArea.insert(END, buff + "\n")
                     outputArea.yview(END)
 
-                    # Κλήση εμφάνισης διαγράμματος
+                    # Κλήση εμφάνισης διαγράμματος Rastrigin
                     if (
-                        pop_num > 0 and gen_num > 0
+                        child_num > 0 and generation_num > 0
                     ):  # Εμφάνιση γραφήματος όταν υπάρχουν Παιδιά - Γονείς
-                        self.show_plot(graphArea, gen_num, pop_num)
+                        self.show_plot(graphArea, generation_num, child_num, dispersion)
 
-                    if pop_num > population_size:
-                        return [best, best_eval]
+                    # Τερματισμός αν ο δημιουργούμενος πλυθυσμός είναι μεγαλύτερος απο τον ζητούμενο
+                    if child_num > population_size:
+                        created_population = created_children
+                        return [best_population, best_evaluation]
 
-                # Loop βάσει παραμέτρου παιδιών
-                for _ in range(n_children):  # Το _ για μη ανάγκη δείκτη
-                    child = None
-                    # Loop ενόσω το παιδί είναι εντός ή εκτός ορίων
-                    while child is None or not self.in_limits(child, limits):
-                        # Δημιουργία παιδιών
-                        child = population[i] + randn(len(limits)) * step_size
-                        children.append(child)
+                # Επανάληψη βάσει υπολογισμένου αριθμού παιδιών
+                for _ in range(children_num):  # Το _ για μη ανάγκη δείκτη
+                    new_child = None
+                    # Επανάληψη ενόσω το δημιουργούμενο παιδί είναι εντός ή εκτός ορίων
+                    while new_child is None or not self.in_limits(new_child, limits):
+                        # Αν δεν βρέθηκε, δημιουργία παιδιού μέσα στα όρια
+                        new_child = (
+                            created_population[i] + randn(len(limits)) * dispersion
+                        )
+                        # Πρόσθεση στην λίστα παιδιών
+                        created_children.append(new_child)
 
-            # Πρόσθεση πληθυσμού απο παιδιά
-            population = children
+            # Αντικατάσταση πληθυσμού απο παιδιά
+            created_population = created_children
 
-        return [best, best_eval]
+        return [best_population, best_evaluation]
+
+    # Gauss plot
+    def Gauss_plot(self, graphArea):
+        self.graphArea = graphArea
+
+        # Μεταβλητή αρίθμησης για την δημιουργία Gauss γραφήματος
+        global key
+        key = 1
+
+        # Υπολογισμός όρων της εξίσωσης Gauss
+        mean = statistics.mean(Gxaxis)
+        sd = statistics.stdev(Gxaxis)
+        result = self.gauss_plot(Gxaxis, mean, sd)
+        # Δημιουργία γραφήματος
+        # Μέσω της globals αρίθμηση στο fig προσθέτωντας το key
+        globals()[f"fig{key}"] = Figure(figsize=(6, 6), dpi=100)
+        axis = globals()[f"fig{key}"].add_subplot(111)
+        # axis = fig.add_subplot(111)
+        # Δημιουργία plot
+        axis.plot(Gxaxis, result)
+        # Εμφάνιση τίτλων διαγράμματος
+        axis.set_title("Gaussian Normal Distribution")
+
+        return
 
     # Rastrigin plot
-    def show_plot(self, graphArea, gen_num, pop_num):
+    def show_plot(self, graphArea, gen_num, child_num, dispersion):
         self.graphArea = graphArea
         self.gen_num = gen_num
-        self.pop_num = pop_num
+        self.child_num = child_num
+        self.dispersion = dispersion
 
-        # Εύρος εισόδου δειγμάτων ομοιόμορφα σε προσαυξήσεις step_size
-        step_size = 0.15
-        xaxis = arange(0, gen_num, step_size)
-        yaxis = arange(0, pop_num, step_size)
+        # Μεταβλητές αρίθμησης για την δημιουργία Rastrigin γραφημάτων
+        global key
+        key = key + 1
+        # Υπολογισμός αριθμού γραφημάτων
+        global cnt_graph
+        cnt_graph = key
+
+        # Εύρος εισόδου δειγμάτων ομοιόμορφα σε προσαυξήσεις dispersion
+        Rxaxis = arange(0, gen_num, dispersion)
+        Ryaxis = arange(0, child_num, dispersion)
         # Δημιουργία πλέγματος από τον άξονα
-        x, y = meshgrid(xaxis, yaxis)
+        x, y = meshgrid(Rxaxis, Ryaxis)
         # Υπολογισμός στόχων
         result = self.rastrigin_plot(x, y)
-        # Δημιουργία διαγράμματος με σχήμα jet color
-        fig = pyplot.figure()
-        axis = fig.add_subplot(111, projection="3d")
+        # Δημιουργία γραφήματος με σχήμα jet color
+        # Μέσω της globals αρίθμηση στο fig προσθέτωντας το key
+        globals()[f"fig{key}"] = Figure(figsize=(6, 6), dpi=100)
+        axis = globals()[f"fig{key}"].add_subplot(111, projection="3d")
         axis.plot_surface(x, y, result, cmap="jet")
-        # Εμφάνιση διαγράμματος
+        # Εμφάνιση τίτλων διαγράμματος
         axis.set_xlabel("Αριθμός Γενεών")
         axis.set_ylabel("Πληθυσμός ανά Γενιά")
-        plotname = "Rastrigin Graph - gen = " + str(gen_num)
-        axis.set_title(plotname)
+        axis.set_zlabel("Διασπορά")
+        axis.set_title("Rastrigin Graph - gen = " + str(gen_num))
 
-        # Εμφάνιση διαγράμματος στον καμβά
-        # canvas = FigureCanvasTkAgg(fig, master = graphArea)
-        # canvas.draw()
-        # canvas.get_tk_widget().pack()
-
-        # Αποθήκευση διαγράμματος
-        pyplot.savefig(plotname)
-        pyplot.show()
+        return
 
     def control(self, outputArea, graphArea):
         self.outputArea = outputArea
         self.graphArea = graphArea
 
-        # Παράμετροι για την λειτουργία των εξελικτικών αλγορίθμων
+        # Παράμετροι για την λειτουργία του εξελικτικού αλγόριθμου
         #
         # Σπόρος της γεννήτριας ψευδοτυχαίων αριθμών
         seed(1)
+
+        # Μέγεθος δημιουργούμενου πληθυσμού - παιδιά
+        str_num = self.t1.get()
+        if len(str_num) == 0:
+            population_size = 100
+        else:
+            population_size = int(str_num)
+
+        # Αριθμός επιλεγμένων γονέων
+        str_num = self.t2.get()
+        if len(str_num) == 0:
+            best_members = 20
+        else:
+            best_members = int(str_num)
+
+        # Ορισμός συνολικών γενεών
+        str_num = self.t3.get()
+        if len(str_num) == 0:
+            max_generations = 5000
+        else:
+            max_generations = int(str_num)
+
         # Oρισμός ελάχιστου και μέγιστου ορίου
         str_num = self.t4.get()
         if len(str_num) == 0:
@@ -278,92 +409,109 @@ class MyWindow:
         else:
             r_max = float(str_num)
 
-        # Ορισμός για το μέγιστο μεγέθος βήματος
+        # Ορισμός για την αρχική τιμή διασποράς κατανομής
         str_num = self.t6.get()
         if len(str_num) == 0:
-            step_size = 0.15
+            dispersion = 0.11
         else:
-            step_size = float(str_num)
+            dispersion = float(str_num)
 
-        # Ορισμός συνολικών επαναλλήψεων
-        str_num = self.t3.get()
-        if len(str_num) == 0:
-            max_iterations = 5000
-        else:
-            max_iterations = int(str_num)
+        # Ορισμός για επιλογή του μοντέλου fitness
+        fitness_var = self.t7.get()
 
-        # Αριθμός επιλεγμένων γονέων
-        str_num = self.t2.get()
-        if len(str_num) == 0:
-            selected_parents = 20
-        else:
-            selected_parents = int(str_num)
-
-        # Μέγεθος δημιουργούμενου πληθυσμού
-        str_num = self.t1.get()
-        if len(str_num) == 0:
-            population_size = 100
-        else:
-            population_size = int(str_num)
-
-        # Εμφάνιση λαθών παραμέτρων στο παραθυρικό περιβάλλον
-        if population_size % selected_parents != 0 or selected_parents == 0:
-            buff = "ΛΑΘΟΣ ΕΙΣΑΓΩΓΗΣ ΔΕΔΟΜΕΝΩΝ ΓΙΑ ΠΛΗΘΥΣΜΟ Ή ΓΟΝΕΙΣ"
+        # Εμφάνιση λαθών ή ελάχιστων παραμέτρων στο παραθυρικό περιβάλλον
+        if population_size == 0:
+            buff = "ΤΟ ΜΕΓΕΘΟΣ ΔΗΜΙΟΥΡΓΟΥΜΕΝΟΥ ΠΛΗΘΥΣΜΟΥ ΠΡΕΠΕΙ ΝΑ ΕΧΕΙ ΤΙΜΗ > 0"
             outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if best_members == 0:
+            buff = "O ΑΡΙΘΜΟΣ ΤΩΝ ΕΠΙΛΕΓΜΕΝΩΝ ΓΟΝΕΩΝ ΠΡΕΠΕΙ ΝΑ ΕΧΕΙ ΤΙΜΗ > 0"
+            outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if max_generations == 0:
+            buff = "O ΑΡΙΘΜΟΣ ΤΩΝ ΓΕΝΕΩΝ ΠΡΕΠΕΙ ΝΑ ΕΧΕΙ ΤΙΜΗ > 0"
+            outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if r_min > -5.0:
+            buff = "ΜΗ ΕΠΙΤΡΕΠΤΗ ΤΙΜΗ ΓΙΑ ΤΟ ΚΑΤΩ ΟΡΙΟ"
+            outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if r_max < 5.0:
+            buff = "ΜΗ ΕΠΙΤΡΕΠΤΗ ΤΙΜΗ ΓΙΑ ΤΟ ΑΝΩ ΟΡΙΟ"
+            outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if dispersion <= 0.1:
+            buff = "ΜΗ ΕΠΙΤΡΕΠΤΗ ΤΙΜΗ ΓΙΑ ΤΗΝ ΑΡΧΙΚΗ ΤΙΜΗ ΔΙΑΣΠΟΡΑΣ"
+            outputArea.insert(END, buff + "\n")
+            outputArea.yview(END)
+            return -1
+
+        if population_size % best_members != 0:
             buff = "Η ΔΙΑΙΡΕΣΗ ΠΛΗΘΥΣΜΟΥ ΠΡΟΣ ΓΟΝΕΙΣ ΠΡΕΠΕΙ ΝΑ ΕΧΕΙ ΥΠΟΛΟΙΠΟ 0"
             outputArea.insert(END, buff + "\n")
             outputArea.yview(END)
             return -1
 
-        # Oρισμός πίνακα ορίων απο τις παραμέτρους ελάχιστου και μέγιστου
-        # Τροποποίηση των ορισθέντων ορίων σε array
+        # Oρισμός πίνακα απο τις παραμέτρους ελάχιστου και μέγιστου ορίου
         limits = asarray([[r_min, r_max], [r_min, r_max]])
 
-        # Εμφάνιση Διαγραμμάτος Gauss
-        # Εύρος εισόδου βάσει παραμέτρων εισόδου ομοιόμορφα σε προσαυξήσεις 0,15
-        global xaxis
-        xaxis = arange(r_min, r_max, step_size)
-        # Υπολογισμός στόχων βάσει εξίσωσης Gauss
-        # result = self.gauss_plot(xaxis, mean, sd)
-        mean = statistics.mean(xaxis)
-        sd = statistics.stdev(xaxis)
-        result = self.gauss_plot(xaxis, mean, sd)
-        # Το figure περιέχει το plot
-        fig = Figure(figsize=(6, 5), dpi=100)
-        gaussplot = fig.add_subplot(111)
-        # Εμφάνιση διαγράμματος στον καμβά
-        gaussplot.plot(xaxis, result)
-        gaussplot.set_title("Gaussian Normal Distribution")
-        # Εμφάνιση διαγράμματος στον καμβά
-        canvas = FigureCanvasTkAgg(fig, master=graphArea)
-        canvas.draw()
-        canvas.get_tk_widget().pack()
-        # pyplot.show()
+        global Gxaxis  # Μεταβλητή κοινής χρήσης για την εμφάνιση και την συνάρτηση fitness του Gauss
+        Gxaxis = arange(r_min, r_max, dispersion)
+
+        # Κλήση δημιουργίας Διαγραμμάτος Gauss για την εμφάνιση εισαγμένων ορίων
+        self.Gauss_plot(graphArea)
 
         # Κλήση του αλγορίθμου αξιολόγησης
-        best, score = self.evolution_algorithm(
+        best_pop, best_eval = self.evolution(
             graphArea,
             outputArea,
+            fitness_var,
             limits,
-            max_iterations,
-            step_size,
-            selected_parents,
+            max_generations,
+            dispersion,
+            best_members,
             population_size,
         )
         print("\nΟΛΟΚΛΗΡΩΣΗ!")
-        print("ΤΕΛΕΙΟ: f(%s) = %f" % (best, score))
+        print("ΤΕΛΕΙΟ: f(%s) = %f" % (best_pop, best_eval))
+
+        # Εισαγωγή όλων των δημιουργημένων διαγραμμάτων στόν καμβά
+        # με σειρά απο το τελευταίο ως το πρώτο ώστε τελικά να εμφανιστούν
+        # με την σειρά δημιουργίας τους.
+        global cnt_graph
+        k = cnt_graph
+        first_graph = 1
+        while k >= first_graph:
+            graph = FigureCanvasTkAgg(globals()[f"fig{k}"], master=self.graphArea)
+            graph.draw()
+            graph.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=False)
+            k = k - 1
+        global key
+        key = first_graph
 
         # Εμφάνιση δεδομένων στο παραθυρικό περιβάλλον
         buff = "ΟΛΟΚΛΗΡΩΣΗ!"
         outputArea.insert(END, buff + "\n")
-        buff = "ΤΕΛΕΙΟ: f(%s) = %f" % (best, score)
+        buff = "ΤΕΛΕΙΟ: f(%s) = %f" % (best_pop, best_eval)
         outputArea.insert(END, buff + "\n")
         outputArea.yview(END)
+
+        return
 
 
 window = Tk()
 mywin = MyWindow(window)
 window.title("Παράμετροι και Εκτέλεση της Εξελικτικής Στρατηγικής")
-window.geometry("1450x600+10+10")
+window.geometry("1450x670+10+10")
 
 window.mainloop()
