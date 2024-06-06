@@ -96,6 +96,13 @@ class App(tk.Tk):
         self.labels["label_7"].grid(row=17, sticky="E")
         self.labels["label_8"].grid(row=20)
         self.labels["label_9"].grid(row=20, sticky="E", padx=(0, 10))
+        self.label_results = tk.Label(
+            self,
+            background=color_main_window,
+            font=("Modern", 12, "bold"),
+            fg="#3572EF",
+        )
+        self.label_results.place(relx=0.7, rely=0.07, anchor="center")
 
         # ------------ Entries ------------
         self.style.configure(
@@ -369,8 +376,8 @@ class App(tk.Tk):
                 "Αριθμός_γενιών": values[2],
                 "Διαστασιμότητα": values[3],
                 "Διασπορά_της_κατανομής": values[4],
-                "Μέσης_τιμή_κατανομής": means_arr,
-                "Πεδία_ορισμού": bounds_arr,
+                "Μέσης_τιμή_κατανομής": means_arr.copy(),
+                "Πεδία_ορισμού": bounds_arr.copy(),
             }
 
             # define range for input
@@ -399,18 +406,12 @@ class App(tk.Tk):
             self.progress_bar.stop()
             self.btn_submit["state"] = "normal"
             self.progress_bar.place_forget()
-            self.label_results = tk.Label(
-                self,
-                text="f(%s) = %f" % (best, score),
-                background=color_main_window,
-                font=("Modern", 16, "bold"),
-                fg="#3572EF",
-            )
-            self.label_results.place(relx=0.7, rely=0.07, anchor="center")
+            self.label_results["text"] = ""
+            self.label_results["text"] = "f(%s) = %f" % (best, score)
+
             self.label_results.lift()
             self.set_default_values()
             print("f(%s) = %f" % (best, score))
-            print(data)
 
 
 if __name__ == "__main__":
