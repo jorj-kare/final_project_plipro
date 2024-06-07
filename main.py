@@ -99,8 +99,8 @@ class App(tk.Tk):
         self.label_results = tk.Label(
             self,
             background=color_main_window,
-            font=("Modern", 12, "bold"),
             fg="#3572EF",
+            font="helvetica 14 bold"
         )
         self.label_results.place(relx=0.7, rely=0.07, anchor="center")
 
@@ -218,6 +218,7 @@ class App(tk.Tk):
     def set_default_values(self):
         means_arr.clear()
         bounds_arr.clear()
+        self.btn_submit["state"] = "normal"
         self.index = 1
         self.labels["label_9"]["text"] = "1η διάσταση"
         self.btn_next_dim["state"] = "normal"
@@ -404,13 +405,11 @@ class App(tk.Tk):
             )
             self.createPlot(generation_means)
             self.progress_bar.stop()
-            self.btn_submit["state"] = "normal"
+           
             self.progress_bar.place_forget()
             self.label_results["text"] = ""
             self.label_results["text"] = "f(%s) = %f" % (best, score)
-
             self.label_results.lift()
-            self.set_default_values()
             print("f(%s) = %f" % (best, score))
 
 
