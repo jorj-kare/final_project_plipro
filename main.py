@@ -70,7 +70,7 @@ class App(tk.Tk):
             "design.TLabel",
             background=color_sidebar,
             foreground=color_text,
-            font="Modern 12 ",
+            font=" 12 ",
             padding=(10, 0, 0, 6),
         )
 
@@ -123,7 +123,7 @@ class App(tk.Tk):
         row = 3
         for i in range(8):
             self.entries["entry_{0}".format(i + 1)] = ttk.Entry(
-                self.sidebar, style="TEntry", width=12, font="Modern 12"
+                self.sidebar, style="TEntry", width=12, font=" 12"
             )
             self.entries["entry_" + str(i + 1)].grid(row=row, padx=10, sticky="W")
             row += 3
@@ -144,7 +144,7 @@ class App(tk.Tk):
             pady=1,
             width=3,
             wraplength=20,
-            font="Modern 15  ",
+            font="15  ",
             relief="groove",
             command=self.next_dimension,
         )
@@ -161,7 +161,7 @@ class App(tk.Tk):
             pady=10,
             width=15,
             wraplength=120,
-            font="Modern 10 ",
+            font="10 ",
             relief="groove",
             command=self.threading,
         )
@@ -178,7 +178,7 @@ class App(tk.Tk):
             pady=10,
             width=10,
             wraplength=120,
-            font="Modern 10 ",
+            font=" 10 ",
             relief="groove",
             command=self.set_default_values,
         )
