@@ -130,6 +130,8 @@ class App(tk.Tk):
 
         self.entries["entry_7"].grid(row=18, padx=10, sticky="E")
         self.entries["entry_8"].grid(row=21)
+        self.set_default_values()
+        self.initialize_plot()
 
         # ------------ Buttons ------------
         # κουμπι για επομενη διασταση
@@ -180,7 +182,7 @@ class App(tk.Tk):
             wraplength=120,
             font=" 10 ",
             relief="groove",
-            command=self.set_default_values,
+            command=self.reset,
         )
         self.btn_reset_form.grid(row=23, pady=(0, 50), padx=(50, 0), sticky="W")
 
@@ -196,43 +198,45 @@ class App(tk.Tk):
         self.progress_bar = ttk.Progressbar(
             self, orient="horizontal", mode="indeterminate", length=200
         )
+          
+        NavigationToolbar2Tk(self.canvas, self)
+    # ------------- Functions ----------------
 
-        # ------------- Plot --------------
+    # ------------- Δημιουργεί το γράφημα --------------
+    def initialize_plot(self):
         self.fig = Figure(facecolor=color_main_window)
         self.plt = self.fig.add_subplot(facecolor=color_main_window)
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.place(relx=0.35, rely=0, relwidth=0.65, relheight=0.95)
-        NavigationToolbar2Tk(self.canvas, self)
 
-        self.set_default_values()
-
-    # ------------- Functions ----------------
 
     # Δημιουργεί νεο thread για την εκτέλεση της μεθόδου "submit_form" ωστε να μπορούν να τρέχουν και άλλες λειτουργίες παράλληλα
     def threading(self):
         t1 = Thread(target=self.submit_form)
         t1.start()
 
-    # Επαναφέρει τις προκαθορισμένες τιμές στις εισόδους τις λιστες των πεδίων ορισμου και μεσης τιμής
+    #Βάζει προκαθορισμένες τιμές στις εισόδους 
     def set_default_values(self):
+        for i in range(8):
+            self.entries["entry_" + str(i + 1)].delete(0, tk.END)
+            self.entries["entry_" + str(i + 1)].insert(0, default_entries_values[i])
+    # Επαναφέρει το πρόγραμμα στην αρχική κατάσταση
+    def reset(self):
         means_arr.clear()
         bounds_arr.clear()
+        self.initialize_plot()
         self.btn_submit["state"] = "normal"
         self.index = 1
         self.labels["label_9"]["text"] = "1η διάσταση"
         self.btn_next_dim["state"] = "normal"
         self.entries["entry_4"]["state"] = "normal"
         for i in range(3):
-            self.entries["entry_" + str(6 + i)]["state"] = "normal"
-        for i in range(8):
-            self.entries["entry_" + str(i + 1)].delete(0, tk.END)
-            self.entries["entry_" + str(i + 1)].insert(0, default_entries_values[i])
+            self.entries["entry_" + str(6 + i)]["state"] = "normal"        
 
     # Δημιουργεί το γράφημα
     def createPlot(self, data):
         self.plt.clear()
-        # self.plt.set_title("Τίτλος γραφήματος", fontsize=16),
         self.plt.set_ylabel(
             "Mέση τιμή του πληθυσμού ανά γενιά",
             fontsize=12,
