@@ -41,9 +41,10 @@ class App(tk.Tk):
         self.index = 1
 
         # ------------ Main window ------------
-        self.geometry("1400x950")
+        self.geometry("1200x750")
         self.title("Simple Evolutionary Strategies")
         self.config(background=color_main_window)
+        # error window
         self.option_add("*Dialog.msg.font", "Modern 12")
 
         # ------------ Sidebar ------------
@@ -62,7 +63,7 @@ class App(tk.Tk):
             self.separators["separator_{0}".format(i + 1)] = ttk.Separator(
                 self.sidebar, orient="horizontal", style="TSeparator"
             )
-            self.separators["separator_" + str(i + 1)].grid(row=row, ipadx=300, pady=20)
+            self.separators["separator_" + str(i + 1)].grid(row=row, ipadx=300, pady=10)
             row += 3
 
         # ------------ Labels ------------
@@ -70,8 +71,8 @@ class App(tk.Tk):
             "design.TLabel",
             background=color_sidebar,
             foreground=color_text,
-            font=" 12 ",
-            padding=(10, 0, 0, 6),
+            font="10",
+            padding=(10, 0, 0, 5),
         )
 
         labels_text = [
@@ -93,7 +94,7 @@ class App(tk.Tk):
             self.labels["label_" + str(i + 1)].grid(row=row, sticky="W")
             row += 3
 
-        self.labels["label_7"].grid(row=17, sticky="E")
+        self.labels["label_7"].grid(row=17, sticky="E", padx=(0, 10))
         self.labels["label_8"].grid(row=20)
         self.labels["label_9"].grid(row=20, sticky="E", padx=(0, 10))
         self.label_results = tk.Label(
@@ -110,7 +111,7 @@ class App(tk.Tk):
             fieldbackground=color_main_window,
             foreground=color_text,
             relief="sunken",
-            padding=(5, 5, 5, 0),
+            padding=2,
         )
         self.style.configure(
             "error.TEntry",
@@ -118,7 +119,7 @@ class App(tk.Tk):
             foreground=color_error,
             bordercolor=color_error,
             relief="sunken",
-            padding=(5, 5, 5, 0),
+            padding=2,
         )
         row = 3
         for i in range(8):
@@ -160,7 +161,7 @@ class App(tk.Tk):
             fg=color_text,
             bg=color_main_window,
             padx=10,
-            pady=10,
+            pady=5,
             width=15,
             wraplength=120,
             font="10 ",
@@ -177,7 +178,7 @@ class App(tk.Tk):
             fg=color_text,
             bg=color_main_window,
             padx=10,
-            pady=10,
+            pady=5,
             width=10,
             wraplength=120,
             font=" 10 ",
