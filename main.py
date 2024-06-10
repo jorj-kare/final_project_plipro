@@ -101,7 +101,7 @@ class App(tk.Tk):
             self,
             background=color_main_window,
             fg="#3572EF",
-            font="helvetica 14 bold"
+            font="helvetica 12 bold"
         )
         self.label_results.place(relx=0.7, rely=0.07, anchor="center")
 
@@ -226,6 +226,7 @@ class App(tk.Tk):
     def reset(self):
         means_arr.clear()
         bounds_arr.clear()
+        self.set_default_values()
         self.initialize_plot()
         self.btn_submit["state"] = "normal"
         self.index = 1
